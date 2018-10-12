@@ -15,7 +15,7 @@
 #include "resource.h"       // main symbols
 
 // CMCAApp:
-// See GuiSample.cpp for the implementation of this class
+// See MCA.cpp for the implementation of this class
 //
 class CMCAApp : public CWinApp
 {

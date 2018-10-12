@@ -83,10 +83,14 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
     if (!m_wndSplitter.CreateStatic(this, 1, 2))
         return FALSE;
 
-    if (!m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CConfigView), CSize(250, 100), pContext) ||
-        !m_wndSplitter.CreateView(0, 1, RUNTIME_CLASS(CMCAView), CSize(100, 100), pContext))
+    m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CConfigView), CSize(250, 100), pContext);
+		
+	m_wndSplitter2.CreateStatic(&m_wndSplitter, 2, 1, WS_CHILD | WS_VISIBLE, m_wndSplitter.IdFromRowCol(0, 1));
+
+	if (!m_wndSplitter2.CreateView(0, 0, RUNTIME_CLASS(CMCAView), CSize(100, 100), pContext)  ||
+        !m_wndSplitter2.CreateView(1, 0, RUNTIME_CLASS(CMCAView), CSize(100, 100), pContext))
     {
-        m_wndSplitter.DestroyWindow();
+        m_wndSplitter2.DestroyWindow();
         return FALSE;
     }
 
@@ -121,7 +125,7 @@ void CMainFrame::Dump(CDumpContext& dc) const
 // CMainFrame message handlers
 CMCAView* CMainFrame::GetRightPane()
 {
-    CWnd* pWnd = m_wndSplitter.GetPane(0, 1);
+    CWnd* pWnd = m_wndSplitter2.GetPane(0, 0);
     CMCAView* pView = DYNAMIC_DOWNCAST(CMCAView, pWnd);
     return pView;
 }

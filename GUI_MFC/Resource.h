@@ -1,12 +1,12 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by GuiSample.rc
+// Used by MCA.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDD_CONFIGURATION               101
 #define ID_VIEW_ARRANGE                 127
 #define IDR_MAINFRAME                   128
-#define IDR_GuiSampleTYPE               129
+#define IDR_MCATYPE               129
 #define IDC_DEVICELIST                  1000
 #define IDC_EXPOSURE_SLIDER             1001
 #define IDC_EXPOSURE_EDIT               1002

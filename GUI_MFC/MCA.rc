@@ -45,7 +45,7 @@ BEGIN
     "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)\r\n"
     "LANGUAGE 7, 1\r\n"
     "#pragma code_page(1252)\r\n"
-    "#include ""res\\GuiSample.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""res\\MCA.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
     "#include ""afxres.rc""         // Standard components\r\n"
     "#endif\r\n"
     "\0"
@@ -61,8 +61,8 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\GuiSample.ico"
-IDR_GuiSampleTYPE       ICON                    "res\\GuiSampleDoc.ico"
+IDR_MAINFRAME           ICON                    "res\\MCA.ico"
+IDR_MCATYPE       ICON                    "res\\MCADoc.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -158,7 +158,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About GuiSample...",         ID_APP_ABOUT
+        MENUITEM "&About MCA...",         ID_APP_ABOUT
     END
 END
 
@@ -187,11 +187,11 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 235, 55
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About GuiSample"
+CAPTION "About MCA"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "pylon GuiSample Version 1.0",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "pylon MCA Version 1.0",IDC_STATIC,40,10,119,8,SS_NOPREFIX
     LTEXT           "",IDC_STATIC,40,25,119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,16,WS_GROUP
 END
@@ -249,7 +249,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "GuiSample\n\nGuiSample\n\n\nGuiSample.Document\nGuiSample.Document"
+    IDR_MAINFRAME           "MCA\n\nMCA\n\n\nMCA.Document\nMCA.Document"
 END
 
 STRINGTABLE
@@ -398,7 +398,7 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
 LANGUAGE 7, 1
 #pragma code_page(1252)
-#include "res\GuiSample.rc2"  // non-Microsoft Visual C++ edited resources
+#include "res\MCA.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #endif
 

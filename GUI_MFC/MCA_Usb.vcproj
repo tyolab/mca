@@ -374,15 +374,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GuiSample.cpp"
+				RelativePath=".\MCA.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GuiSampleDoc.cpp"
+				RelativePath=".\MCADoc.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GuiSampleView.cpp"
+				RelativePath=".\MCAView.cpp"
 				>
 			</File>
 			<File
@@ -444,15 +444,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GuiSample.h"
+				RelativePath=".\MCA.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GuiSampleDoc.h"
+				RelativePath=".\MCADoc.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GuiSampleView.h"
+				RelativePath=".\MCAView.h"
 				>
 			</File>
 			<File
@@ -478,19 +478,19 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\res\GuiSample.ico"
+				RelativePath=".\res\MCA.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\GuiSample.rc"
+				RelativePath=".\MCA.rc"
 				>
 			</File>
 			<File
-				RelativePath=".\res\GuiSample.rc2"
+				RelativePath=".\res\MCA.rc2"
 				>
 			</File>
 			<File
-				RelativePath=".\res\GuiSampleDoc.ico"
+				RelativePath=".\res\MCADoc.ico"
 				>
 			</File>
 			<File

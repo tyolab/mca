@@ -22,6 +22,7 @@ protected: // create from serialization only
 // Attributes
 protected:
     CSplitterWnd m_wndSplitter;
+	CSplitterWnd m_wndSplitter2;
 public:
 
 // Operations

@@ -10,6 +10,8 @@
 */
 #pragma once
 
+class CMCADoc;
+
 class CMCAView : public CScrollView
 {
 protected: // create from serialization only
@@ -48,7 +50,7 @@ public:
     virtual void OnUpdate(CView* /*pSender*/, LPARAM /*lHint*/, CObject* /*pHint*/);
 };
 
-#ifndef _DEBUG  // debug version in GuiSampleView.cpp
+#ifndef _DEBUG  // debug version in MCAView.cpp
 inline CMCADoc* CMCAView::GetDocument() const
    { return reinterpret_cast<CMCADoc*>(m_pDocument); }
 #endif
