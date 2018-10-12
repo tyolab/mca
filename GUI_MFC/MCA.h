@@ -17,7 +17,7 @@
 // CMCAApp:
 // See MCA.cpp for the implementation of this class
 //
-class CMCAApp : public CWinApp
+class CMCAApp : public CWinAppEx
 {
 public:
     CMCAApp();

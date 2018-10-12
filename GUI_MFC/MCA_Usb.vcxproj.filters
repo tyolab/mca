@@ -42,6 +42,9 @@
     <ClCompile Include="CameraView1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\ChildFrm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AutoPacketSizeConfiguration.h">
@@ -75,6 +78,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CameraView1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\ChildFrm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

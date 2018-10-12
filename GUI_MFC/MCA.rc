@@ -62,7 +62,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\MCA.ico"
-IDR_MCATYPE       ICON                    "res\\MCADoc.ico"
+
+IDR_MCATYPE             ICON                    "res\\MCADoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -110,6 +112,7 @@ END
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Toolbar
@@ -144,9 +147,9 @@ BEGIN
     END
     POPUP "Camera"
     BEGIN
-        MENUITEM "Grab One",                    ID_CAMERA_GRABONE
-        MENUITEM "Grab Continous",              ID_CAMERA_STARTGRABBING
-        MENUITEM "Stop Grab",                   ID_CAMERA_STOPGRABBING
+        MENUITEM "Snap Image",                  ID_CAMERA_GRABONE
+        MENUITEM "Record",                      ID_CAMERA_STARTGRABBING
+        MENUITEM "Stop",                        ID_CAMERA_STOPGRABBING
     END
     POPUP "&View"
     BEGIN
@@ -158,7 +161,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About MCA...",         ID_APP_ABOUT
+        MENUITEM "&About MCA...",               ID_APP_ABOUT
     END
 END
 

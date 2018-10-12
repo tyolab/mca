@@ -213,6 +213,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\ChildFrm.cpp" />
     <ClCompile Include="CameraView2.cpp" />
     <ClCompile Include="CameraView1.cpp" />
     <ClCompile Include="ConfigView.cpp" />
@@ -230,6 +231,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AutoPacketSizeConfiguration.h" />
+    <ClInclude Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\ChildFrm.h" />
+    <ClInclude Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\targetver.h" />
     <ClInclude Include="CameraView2.h" />
     <ClInclude Include="CameraView1.h" />
     <ClInclude Include="ConfigView.h" />

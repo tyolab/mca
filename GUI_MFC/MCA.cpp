@@ -13,6 +13,11 @@
 #include "MCADoc.h"
 #include "ConfigView.h"
 
+#include <pylon/PylonIncludes.h>
+#ifdef PYLON_WIN_BUILD
+#    include <pylon/PylonGUI.h>
+#endif
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -58,8 +63,20 @@ BOOL CMCAApp::InitInstance()
     // Change the registry key under which our settings are stored
     // TODO: You should modify this string to be something appropriate
     // such as the name of your company or organization
-    SetRegistryKey(_T("Basler\\pylon\\Samples"));
+    SetRegistryKey(_T("tyolab\\mca"));
     LoadStdProfileSettings(0);  // Load standard INI file options (including MRU)
+
+	InitContextMenuManager();
+	InitShellManager();
+
+	InitKeyboardManager();
+
+	InitTooltipManager();
+	CMFCToolTipInfo ttParams;
+	ttParams.m_bVislManagerTheme = TRUE;
+	theApp.GetTooltipManager()->SetTooltipParams(AFX_TOOLTIP_TYPE_ALL,
+		RUNTIME_CLASS(CMFCToolTipCtrl), &ttParams);
+
 
     // Before using any pylon methods, the pylon runtime must be initialized.
     Pylon::PylonInitialize();
