@@ -1,0 +1,33 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2046
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GUI_Sample", "GUI_MFC\GuiSample_Usb.vcxproj", "{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Debug|Win32.Build.0 = Debug|Win32
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Debug|x64.ActiveCfg = Debug|x64
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Debug|x64.Build.0 = Debug|x64
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Release|Win32.ActiveCfg = Release|Win32
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Release|Win32.Build.0 = Release|Win32
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Release|x64.ActiveCfg = Release|x64
+		{9CB7E9AF-FCCD-4BFB-8245-0AC119B885A5}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {289A6605-1F72-4517-82CA-2F9414C11DAB}
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
+EndGlobal
