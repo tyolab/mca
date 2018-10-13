@@ -86,15 +86,36 @@ BOOL CMCAApp::InitInstance()
     
     // Register the application's document templates.  Document templates
     //  serve as the connection between documents, frame windows and views
-    CSingleDocTemplate* pDocTemplate;
-    pDocTemplate = new CSingleDocTemplate(
+    // CSingleDocTemplate* pDocTemplate;
+    // pDocTemplate = new CSingleDocTemplate(
+    //     IDR_MAINFRAME,
+    //     RUNTIME_CLASS(CMCADoc),
+    //     RUNTIME_CLASS(CMainFrame),       // main SDI frame window
+    //     RUNTIME_CLASS(CConfigView));
+    // if (!pDocTemplate)
+    //     return FALSE;
+    // AddDocTemplate(pDocTemplate);
+
+    EnableTaskbarInteraction();
+
+    CMultiDocTemplate* pDocTemplate;
+	pDocTemplate = new CMultiDocTemplate(
         IDR_MAINFRAME,
-        RUNTIME_CLASS(CMCADoc),
-        RUNTIME_CLASS(CMainFrame),       // main SDI frame window
-        RUNTIME_CLASS(CConfigView));
-    if (!pDocTemplate)
-        return FALSE;
-    AddDocTemplate(pDocTemplate);
+		RUNTIME_CLASS(CMCADoc),
+        RUNTIME_CLASS(CChildFrame),       // main SDI frame window
+        RUNTIME_CLASS(CMCAView));
+	if (!pDocTemplate)
+		return FALSE;
+	AddDocTemplate(pDocTemplate);
+
+    create main MDI Frame window
+	CMainFrame* pMainFrame = new CMainFrame;
+	if (!pMainFrame || !pMainFrame->LoadFrame(IDR_MAINFRAME))
+	{
+		delete pMainFrame;
+		return FALSE;
+	}
+	m_pMainWnd = pMainFrame;
 
     // Parse command line for standard shell commands, DDE, file open
     CCommandLineInfo cmdInfo;

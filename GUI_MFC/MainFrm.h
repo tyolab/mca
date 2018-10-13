@@ -12,12 +12,14 @@
 
 class CMCAView;
 
-class CMainFrame : public CFrameWnd
+class CMainFrame : public CMDIFrameWndEx
 {
     
-protected: // create from serialization only
-    CMainFrame();
+// create from serialization only
     DECLARE_DYNCREATE(CMainFrame)
+
+public:
+	CMainFrame();
 
 // Attributes
 protected:
@@ -32,6 +34,8 @@ public:
 public:
     virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
     virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	virtual BOOL LoadFrame(UINT nIDResource, DWORD dwDefaultStyle = WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, CWnd* pParentWnd = nullptr, CCreateContext* pContext = nullptr);
+
 
 // Implementation
 public:
@@ -48,6 +52,13 @@ protected:  // control bar embedded members
 
 // Generated message map functions
 protected:
-    afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-    DECLARE_MESSAGE_MAP()
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnWindowManager();
+	afx_msg void OnViewCustomize();
+	afx_msg LRESULT OnToolbarCreateNew(WPARAM wp, LPARAM lp);
+	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
+	DECLARE_MESSAGE_MAP()
+
+	BOOL CreateDockingWindows();
+	void SetDockingWindowIcons(BOOL bHiColorIcons);
 };

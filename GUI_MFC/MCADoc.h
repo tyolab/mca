@@ -26,8 +26,10 @@ class CMCADoc :
 
 {
 protected: // create from serialization only
-    CMCADoc();
     DECLARE_DYNCREATE(CMCADoc)
+
+public:
+	CMCADoc();
 
 // Attributes
 public:

@@ -20,9 +20,9 @@
 #endif
 
 // CMainFrame
-IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
+IMPLEMENT_DYNCREATE(CMainFrame, CMDIFrameWndEx)
 
-BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
+BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
     ON_WM_CREATE()
 END_MESSAGE_MAP()
 
@@ -48,7 +48,7 @@ CMainFrame::~CMainFrame()
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-    if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
+    if (CMDIFrameWndEx::OnCreate(lpCreateStruct) == -1)
         return -1;
     
     if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
@@ -82,20 +82,20 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
 	CRect cr;
 	GetWindowRect(&cr);
 
-    // create splitter window
-    if (!m_wndSplitter.CreateStatic(this, 1, 2))
-        return FALSE;
+    // // create splitter window
+    // if (!m_wndSplitter.CreateStatic(this, 1, 2))
+    //     return FALSE;
 
-    m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CConfigView), CSize(250, 100), pContext);
+    // m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CConfigView), CSize(250, 100), pContext);
 		
-	m_wndSplitter2.CreateStatic(&m_wndSplitter, 2, 1, WS_CHILD | WS_VISIBLE, m_wndSplitter.IdFromRowCol(0, 1));
+	// m_wndSplitter2.CreateStatic(&m_wndSplitter, 2, 1, WS_CHILD | WS_VISIBLE, m_wndSplitter.IdFromRowCol(0, 1));
 
-	if (!m_wndSplitter2.CreateView(0, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext)  ||
-        !m_wndSplitter2.CreateView(1, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext))
-    {
-        m_wndSplitter2.DestroyWindow();
-        return FALSE;
-    }
+	// if (!m_wndSplitter2.CreateView(0, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext)  ||
+    //     !m_wndSplitter2.CreateView(1, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext))
+    // {
+    //     m_wndSplitter2.DestroyWindow();
+    //     return FALSE;
+    // }
 
     return TRUE;
 }
@@ -103,7 +103,7 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-    if( !CFrameWnd::PreCreateWindow(cs) )
+    if( !CMDIFrameWndEx::PreCreateWindow(cs) )
         return FALSE;
     // TODO: Modify the Window class or styles here by modifying
     //  the CREATESTRUCT cs
@@ -115,13 +115,13 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 #ifdef _DEBUG
 void CMainFrame::AssertValid() const
 {
-    CFrameWnd::AssertValid();
+    CMDIFrameWndEx::AssertValid();
 }
 
 
 void CMainFrame::Dump(CDumpContext& dc) const
 {
-    CFrameWnd::Dump(dc);
+    CMDIFrameWndEx::Dump(dc);
 }
 #endif //_DEBUG
 
@@ -131,4 +131,95 @@ CMCAView* CMainFrame::GetRightPane()
     CWnd* pWnd = m_wndSplitter2.GetPane(0, 0);
     CMCAView* pView = DYNAMIC_DOWNCAST(CMCAView, pWnd);
     return pView;
+}
+
+// CMainFrame message handlers
+
+void CMainFrame::OnWindowManager()
+{
+	ShowWindowsDialog();
+}
+
+void CMainFrame::OnViewCustomize()
+{
+	CMFCToolBarsCustomizeDialog* pDlgCust = new CMFCToolBarsCustomizeDialog(this, TRUE /* scan menus */);
+	pDlgCust->EnableUserDefinedToolbars();
+	pDlgCust->Create();
+}
+
+LRESULT CMainFrame::OnToolbarCreateNew(WPARAM wp, LPARAM lp)
+{
+	LRESULT lres = CMDIFrameWndEx::OnToolbarCreateNew(wp, lp);
+	if (lres == 0)
+	{
+		return 0;
+	}
+
+	CMFCToolBar* pUserToolbar = (CMFCToolBar*)lres;
+	ASSERT_VALID(pUserToolbar);
+
+	//BOOL bNameValid;
+	//CString strCustomize;
+	//bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	//ASSERT(bNameValid);
+
+	//pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+	return lres;
+}
+
+void CMainFrame::OnSettingChange(UINT uFlags, LPCTSTR lpszSection)
+{
+	CMDIFrameWndEx::OnSettingChange(uFlags, lpszSection);
+}
+
+BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParentWnd, CCreateContext* pContext)
+{
+	// base class does the real work
+
+	if (!CMDIFrameWndEx::LoadFrame(nIDResource, dwDefaultStyle, pParentWnd, pContext))
+	{
+		return FALSE;
+	}
+
+
+	// enable customization button for all user toolbars
+	//BOOL bNameValid;
+	//CString strCustomize;
+	//bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	//ASSERT(bNameValid);
+
+	//for (int i = 0; i < iMaxUserToolbars; i++)
+	//{
+	//	CMFCToolBar* pUserToolbar = GetUserToolBarByIndex(i);
+	//	if (pUserToolbar != nullptr)
+	//	{
+	//		pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+	//	}
+	//}
+
+	return TRUE;
+}
+
+void CMainFrame::SetDockingWindowIcons(BOOL bHiColorIcons)
+{
+	//HICON hOutputBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_OUTPUT_WND_HC : IDI_OUTPUT_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	//m_wndOutput.SetIcon(hOutputBarIcon, FALSE);
+
+}
+
+BOOL CMainFrame::CreateDockingWindows()
+{
+	//BOOL bNameValid;
+	//// Create output window
+	//CString strOutputWnd;
+	//bNameValid = strOutputWnd.LoadString(IDS_OUTPUT_WND);
+	//ASSERT(bNameValid);
+	//if (!m_wndOutput.Create(strOutputWnd, this, CRect(0, 0, 100, 100), TRUE, ID_VIEW_OUTPUTWND, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_BOTTOM | CBRS_FLOAT_MULTI))
+	//{
+	//	TRACE0("Failed to create Output window\n");
+	//	return FALSE; // failed to create
+	//}
+
+	//SetDockingWindowIcons(theApp.m_bHiColorIcons);
+	return TRUE;
 }

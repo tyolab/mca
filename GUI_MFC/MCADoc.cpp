@@ -278,7 +278,7 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     // This function is called from the CInstantCamera grab thread.
     // You shouldn't perform lengthy operations here.
     // Also, you shouldn't access any UI objects, since we are not in the GUI thread.
-    // We just store the grab result in the document and post a message to the CFrameWnd
+    // We just store the grab result in the document and post a message to the CMDIFrameWndEx
     // to notify it of the new result. In response to this message, we will update the GUI.
 
     // The following line is commented out as this function will be called very often
