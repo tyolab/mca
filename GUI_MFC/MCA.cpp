@@ -10,8 +10,10 @@
 #include "MCA.h"
 #include "MainFrm.h"
 
+#include "ChildFrm.h"
 #include "MCADoc.h"
 #include "ConfigView.h"
+#include "MCAView.h"
 
 #include <pylon/PylonIncludes.h>
 #ifdef PYLON_WIN_BUILD
@@ -108,7 +110,7 @@ BOOL CMCAApp::InitInstance()
 		return FALSE;
 	AddDocTemplate(pDocTemplate);
 
-    create main MDI Frame window
+    //create main MDI Frame window
 	CMainFrame* pMainFrame = new CMainFrame;
 	if (!pMainFrame || !pMainFrame->LoadFrame(IDR_MAINFRAME))
 	{

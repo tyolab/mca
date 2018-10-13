@@ -42,7 +42,7 @@
     <ClCompile Include="CameraView1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\ChildFrm.cpp">
+    <ClCompile Include="ChildFrm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,10 +80,10 @@
     <ClInclude Include="CameraView1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\ChildFrm.h">
+    <ClInclude Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\dev\source\repos\MFCApplication1\MFCApplication1\targetver.h">
+    <ClInclude Include="ChildFrm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

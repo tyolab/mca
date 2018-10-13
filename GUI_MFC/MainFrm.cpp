@@ -22,8 +22,16 @@
 // CMainFrame
 IMPLEMENT_DYNCREATE(CMainFrame, CMDIFrameWndEx)
 
+const int  iMaxUserToolbars = 10;
+const UINT uiFirstUserToolBarId = AFX_IDW_CONTROLBAR_FIRST + 40;
+const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
+
 BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
     ON_WM_CREATE()
+	ON_COMMAND(ID_WINDOW_MANAGER, &CMainFrame::OnWindowManager)
+	ON_COMMAND(ID_VIEW_CUSTOMIZE, &CMainFrame::OnViewCustomize)
+	ON_REGISTERED_MESSAGE(AFX_WM_CREATETOOLBAR, &CMainFrame::OnToolbarCreateNew)
+	ON_WM_SETTINGCHANGE()
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -68,37 +76,37 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     }
 
     // TODO: Delete these three lines if you don't want the toolbar to be dockable
-    m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
-    EnableDocking(CBRS_ALIGN_ANY);
-    DockControlBar(&m_wndToolBar);
+    //m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
+    //EnableDocking(CBRS_ALIGN_ANY);
+    //DockControlBar(&m_wndToolBar);
 
     return 0;
 }
 
 
-BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
-    CCreateContext* pContext)
-{
-	CRect cr;
-	GetWindowRect(&cr);
-
-    // // create splitter window
-    // if (!m_wndSplitter.CreateStatic(this, 1, 2))
-    //     return FALSE;
-
-    // m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CConfigView), CSize(250, 100), pContext);
-		
-	// m_wndSplitter2.CreateStatic(&m_wndSplitter, 2, 1, WS_CHILD | WS_VISIBLE, m_wndSplitter.IdFromRowCol(0, 1));
-
-	// if (!m_wndSplitter2.CreateView(0, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext)  ||
-    //     !m_wndSplitter2.CreateView(1, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext))
-    // {
-    //     m_wndSplitter2.DestroyWindow();
-    //     return FALSE;
-    // }
-
-    return TRUE;
-}
+//BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/,
+//    CCreateContext* pContext)
+//{
+//	CRect cr;
+//	GetWindowRect(&cr);
+//
+//    // // create splitter window
+//    // if (!m_wndSplitter.CreateStatic(this, 1, 2))
+//    //     return FALSE;
+//
+//    // m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CConfigView), CSize(250, 100), pContext);
+//		
+//	// m_wndSplitter2.CreateStatic(&m_wndSplitter, 2, 1, WS_CHILD | WS_VISIBLE, m_wndSplitter.IdFromRowCol(0, 1));
+//
+//	// if (!m_wndSplitter2.CreateView(0, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext)  ||
+//    //     !m_wndSplitter2.CreateView(1, 0, RUNTIME_CLASS(CMCAView), CSize(100, cr.Height() / 2), pContext))
+//    // {
+//    //     m_wndSplitter2.DestroyWindow();
+//    //     return FALSE;
+//    // }
+//
+//    return TRUE;
+//}
 
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
@@ -182,20 +190,20 @@ BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParent
 	}
 
 
-	// enable customization button for all user toolbars
-	//BOOL bNameValid;
-	//CString strCustomize;
-	//bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
-	//ASSERT(bNameValid);
+	 //enable customization button for all user toolbars
+	BOOL bNameValid;
+	CString strCustomize;
+	bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	ASSERT(bNameValid);
 
-	//for (int i = 0; i < iMaxUserToolbars; i++)
-	//{
-	//	CMFCToolBar* pUserToolbar = GetUserToolBarByIndex(i);
-	//	if (pUserToolbar != nullptr)
-	//	{
-	//		pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
-	//	}
-	//}
+	for (int i = 0; i < iMaxUserToolbars; i++)
+	{
+		CMFCToolBar* pUserToolbar = GetUserToolBarByIndex(i);
+		if (pUserToolbar != nullptr)
+		{
+			pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+		}
+	}
 
 	return TRUE;
 }

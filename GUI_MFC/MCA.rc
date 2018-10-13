@@ -384,6 +384,20 @@ BEGIN
     ID_CAMERA_STOPGRAB      "Stop the current grab\nStop"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_STATUS_PANE1        "Pane 1"
+    IDS_STATUS_PANE2        "Pane 2"
+    IDS_TOOLBAR_STANDARD    "Standard"
+    IDS_TOOLBAR_CUSTOMIZE   "Customize..."
+    ID_WINDOW_MANAGER       "&Windows..."
+    IDS_OUTPUT_WND          "Output"
+    IDS_BUILD_TAB           "Build"
+    IDS_DEBUG_TAB           "Debug"
+    IDS_FIND_TAB            "Find"
+    IDS_EDIT_MENU           "Edit"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
