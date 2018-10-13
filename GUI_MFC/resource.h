@@ -16,8 +16,8 @@
 #define IDR_MAINFRAME_256			129
 #define IDR_MCATYPE				130
 #define ID_WINDOW_MANAGER			131
-#define ID_VIEW_FILEVIEW			133
-#define ID_VIEW_CLASSVIEW			134
+#define ID_VIEW_MANAGEDOCK			133
+#define ID_VIEW_CONFIGVIEW			134
 #define ID_PROPERTIES				135
 #define ID_OPEN						136
 #define ID_OPEN_WITH				137

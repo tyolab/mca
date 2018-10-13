@@ -78,7 +78,7 @@ CConfigView * CConfigView::CreateOne(CWnd * pParent)
 	if (!p_ManagePanel->CreateEx(0, NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 205, 157),
 		pParent, -1, nullptr))
 #else 
-	if (!p_ManagePanel->Create(NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 300, 300), pParent, 0, nullptr))
+	if (!p_ManagePanel->Create(NULL, NULL, AFX_WS_DEFAULT_VIEW, CRect(0, 0, 300, 300), pParent, AFX_IDW_PANE_FIRST, NULL))
 #endif 
 		//if( !pFormView->CreateEx( 0, AfxRegisterWndClass(0, 0, 0, 0), NULL, 
 		// WS_CHILD | WS_VISIBLE, CRect( 0, 0, 205, 157), pParent, -1, pContext) ) 
@@ -86,7 +86,7 @@ CConfigView * CConfigView::CreateOne(CWnd * pParent)
 		AfxMessageBox(_T("Failed in creating CMyFormView"));
 
 	}
-	p_ManagePanel->OnInitialUpdate();
+	// p_ManagePanel->OnInitialUpdate();
 	return p_ManagePanel;
 }
 
