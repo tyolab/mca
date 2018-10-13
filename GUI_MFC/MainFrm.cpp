@@ -75,6 +75,19 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
         return -1;      // fail to create
     }
 
+	// CDockingManager::SetDockingMode(DT_SMART);
+	// // enable Visual Studio 2008 style docking window auto-hide behavior
+	// EnableAutoHidePanes(CBRS_ALIGN_ANY);
+	// // create docking windows
+	// if (!CreateDockingWindows())
+	// {
+	// 	TRACE0("Failed to create docking windows\\n");
+	// 	return -1;
+	// }
+
+	// m_wndManageDock.EnableDocking(CBRS_ALIGN_ANY);
+	// DockPane(&m_wndManageDock);
+
     // TODO: Delete these three lines if you don't want the toolbar to be dockable
     //m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
     //EnableDocking(CBRS_ALIGN_ANY);
@@ -217,7 +230,7 @@ void CMainFrame::SetDockingWindowIcons(BOOL bHiColorIcons)
 
 BOOL CMainFrame::CreateDockingWindows()
 {
-	//BOOL bNameValid;
+	BOOL bNameValid;
 	//// Create output window
 	//CString strOutputWnd;
 	//bNameValid = strOutputWnd.LoadString(IDS_OUTPUT_WND);
@@ -229,5 +242,15 @@ BOOL CMainFrame::CreateDockingWindows()
 	//}
 
 	//SetDockingWindowIcons(theApp.m_bHiColorIcons);
+	// Create class view
+	//CString strClassView;
+	//bNameValid = strClassView.LoadString(IDS_CLASS_VIEW);
+	//ASSERT(bNameValid);
+	//if (!m_wndConfigView.Create(strClassView, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_CLASSVIEW, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT | CBRS_FLOAT_MULTI))
+	//{
+	//	TRACE0("Failed to create Class View window\n");
+	//	return FALSE; // failed to create
+	//}
+
 	return TRUE;
 }

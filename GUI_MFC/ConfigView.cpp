@@ -65,6 +65,31 @@ CConfigView::~CConfigView()
 {
 }
 
+CConfigView * CConfigView::CreateOne(CWnd * pParent)
+{
+	CConfigView *p_ManagePanel = new CConfigView;
+
+	//CMyFormView *pFormView = NULL; 
+   //CRuntimeClass *pRuntimeClass = RUNTIME_CLASS(CMyFormView); 
+   //pFormView = (CMyFormView *)pRuntimeClass->CreateObject(); 
+
+   //CDockableFormViewAppDoc *pDoc = CDockableFormViewAppDoc::CreateOne();////////////////////////////////////////68 //pFormView->m_pDocument = pDoc;//////////////////////////////////////////////////////////////////////////////69 CCreateContext *pContext = NULL;
+#if 0 
+	if (!p_ManagePanel->CreateEx(0, NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 205, 157),
+		pParent, -1, nullptr))
+#else 
+	if (!p_ManagePanel->Create(NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 300, 300), pParent, 0, nullptr))
+#endif 
+		//if( !pFormView->CreateEx( 0, AfxRegisterWndClass(0, 0, 0, 0), NULL, 
+		// WS_CHILD | WS_VISIBLE, CRect( 0, 0, 205, 157), pParent, -1, pContext) ) 
+	{
+		AfxMessageBox(_T("Failed in creating CMyFormView"));
+
+	}
+	p_ManagePanel->OnInitialUpdate();
+	return p_ManagePanel;
+}
+
 
 void CConfigView::DoDataExchange( CDataExchange* pDX )
 {

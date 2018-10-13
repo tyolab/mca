@@ -11,6 +11,7 @@
 #pragma once
 #include "afxcmn.h"
 #include "afxwin.h"
+#include "Resource.h"
 
 // forwards
 class CMCADoc;
@@ -27,6 +28,10 @@ public:
 protected:
     CConfigView();           // protected constructor used by dynamic creation
     virtual ~CConfigView();
+
+public:
+	static CConfigView *CreateOne(CWnd *pParent);
+
 public:
     enum { IDD = IDD_CONFIGURATION };
 #ifdef _DEBUG

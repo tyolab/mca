@@ -396,6 +396,7 @@ BEGIN
     IDS_DEBUG_TAB           "Debug"
     IDS_FIND_TAB            "Find"
     IDS_EDIT_MENU           "Edit"
+    IDS_CONFIG_VIEW          "Configuration View"
 END
 
 #endif    // English (United States) resources

@@ -10,6 +10,8 @@
 */
 #pragma once
 
+#include "ManageDock.h"
+
 class CMCAView;
 
 class CMainFrame : public CMDIFrameWndEx
@@ -49,6 +51,8 @@ public:
 protected:  // control bar embedded members
     CStatusBar  m_wndStatusBar;
     CToolBar    m_wndToolBar;
+	//CConfigView m_wndConfigView;
+	CManageDock m_wndManageDock;
 
 // Generated message map functions
 protected:

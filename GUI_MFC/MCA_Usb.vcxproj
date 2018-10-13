@@ -217,6 +217,7 @@
     <ClCompile Include="CameraView1.cpp" />
     <ClCompile Include="ChildFrm.cpp" />
     <ClCompile Include="ConfigView.cpp" />
+    <ClCompile Include="ManageDock.cpp" />
     <ClCompile Include="MCA.cpp" />
     <ClCompile Include="MCADoc.cpp" />
     <ClCompile Include="MCAView.cpp" />
@@ -236,6 +237,7 @@
     <ClInclude Include="CameraView1.h" />
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="ConfigView.h" />
+    <ClInclude Include="ManageDock.h" />
     <ClInclude Include="MCA.h" />
     <ClInclude Include="MCADoc.h" />
     <ClInclude Include="MCAView.h" />
