@@ -40,6 +40,10 @@ public:
     virtual void Dump(CDumpContext& dc) const;
 #endif
 #endif
+
+private:
+	CMCADoc *m_dummyDoc;
+
     // Attributes
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

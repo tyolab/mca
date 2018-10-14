@@ -27,10 +27,23 @@ const UINT uiFirstUserToolBarId = AFX_IDW_CONTROLBAR_FIRST + 40;
 const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
 
 BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWndEx)
-    ON_WM_CREATE()
+	ON_WM_CREATE()
 	ON_COMMAND(ID_WINDOW_MANAGER, &CMainFrame::OnWindowManager)
 	ON_COMMAND(ID_VIEW_CUSTOMIZE, &CMainFrame::OnViewCustomize)
 	ON_REGISTERED_MESSAGE(AFX_WM_CREATETOOLBAR, &CMainFrame::OnToolbarCreateNew)
+	//ON_COMMAND_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnApplicationLook)
+	//ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnUpdateApplicationLook)
+	//ON_COMMAND(ID_VIEW_CAPTION_BAR, &CMainFrame::OnViewCaptionBar)
+	//ON_UPDATE_COMMAND_UI(ID_VIEW_CAPTION_BAR, &CMainFrame::OnUpdateViewCaptionBar)
+	//ON_COMMAND(ID_TOOLS_OPTIONS, &CMainFrame::OnOptions)
+	//ON_COMMAND(ID_VIEW_FILEVIEW, &CMainFrame::OnViewFileView)
+	//ON_UPDATE_COMMAND_UI(ID_VIEW_FILEVIEW, &CMainFrame::OnUpdateViewFileView)
+	//ON_COMMAND(ID_VIEW_CLASSVIEW, &CMainFrame::OnViewClassView)
+	//ON_UPDATE_COMMAND_UI(ID_VIEW_CLASSVIEW, &CMainFrame::OnUpdateViewClassView)
+	//ON_COMMAND(ID_VIEW_OUTPUTWND, &CMainFrame::OnViewOutputWindow)
+	//ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUTWND, &CMainFrame::OnUpdateViewOutputWindow)
+	//ON_COMMAND(ID_VIEW_PROPERTIESWND, &CMainFrame::OnViewPropertiesWindow)
+	//ON_UPDATE_COMMAND_UI(ID_VIEW_PROPERTIESWND, &CMainFrame::OnUpdateViewPropertiesWindow)
 	ON_WM_SETTINGCHANGE()
 END_MESSAGE_MAP()
 
@@ -46,6 +59,7 @@ static UINT indicators[] =
 CMainFrame::CMainFrame()
 {
     // TODO: add member initialization code here
+	theApp.m_nAppLook = theApp.GetInt(_T("ApplicationLook"), ID_VIEW_APPLOOK_VS_2008);
 }
 
 
@@ -59,6 +73,10 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     if (CMDIFrameWndEx::OnCreate(lpCreateStruct) == -1)
         return -1;
     
+	BOOL bNameValid;
+
+
+
     if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
         |  CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
         !m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
@@ -252,7 +270,10 @@ BOOL CMainFrame::CreateDockingWindows()
 	//	return FALSE; // failed to create
 	//}
 
-	if (!m_wndManageDock.Create(_T("Manage Panel"), this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_MANAGEDOCK,
+	CRect rc;
+	GetClientRect(&rc);
+
+	if (!m_wndManageDock.Create(_T("Camera Configuration"), this, CRect(0, 0, 300, rc.Height()), TRUE, ID_VIEW_MANAGEDOCK,
 		         WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT | CBRS_FLOAT_MULTI))
 	{
 	    TRACE0("failed config view\n");

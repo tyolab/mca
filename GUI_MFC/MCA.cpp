@@ -123,6 +123,10 @@ BOOL CMCAApp::InitInstance()
     CCommandLineInfo cmdInfo;
     ParseCommandLine(cmdInfo);
 
+	// disable new file
+	if (cmdInfo.m_nShellCommand == CCommandLineInfo::FileNew)   // actually none
+		cmdInfo.m_nShellCommand = CCommandLineInfo::FileNothing;
+
     // Dispatch commands specified on the command line.  Will return FALSE if
     // app was launched with /RegServer, /Register, /Unregserver or /Unregister.
     if (!ProcessShellCommand(cmdInfo))

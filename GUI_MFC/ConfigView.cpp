@@ -57,18 +57,21 @@ CConfigView::CConfigView()
 : CFormView( CConfigView::IDD )
 , m_updatingList( FALSE )
 {
-
+	m_dummyDoc = new CMCADoc;
 }
 
 
 CConfigView::~CConfigView()
 {
+	delete m_dummyDoc;
 }
 
 CConfigView * CConfigView::CreateOne(CWnd * pParent)
 {
 	CConfigView *p_ManagePanel = new CConfigView;
 
+	CRect rc;
+	pParent->GetWindowRect(&rc);
 	//CMyFormView *pFormView = NULL; 
    //CRuntimeClass *pRuntimeClass = RUNTIME_CLASS(CMyFormView); 
    //pFormView = (CMyFormView *)pRuntimeClass->CreateObject(); 
@@ -78,7 +81,7 @@ CConfigView * CConfigView::CreateOne(CWnd * pParent)
 	if (!p_ManagePanel->CreateEx(0, NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 205, 157),
 		pParent, -1, nullptr))
 #else 
-	if (!p_ManagePanel->Create(NULL, NULL, AFX_WS_DEFAULT_VIEW, CRect(0, 0, 300, 300), pParent, AFX_IDW_PANE_FIRST, NULL))
+	if (!p_ManagePanel->Create(NULL, NULL, AFX_WS_DEFAULT_VIEW, CRect(0, 0, rc.Width(), rc.Height()), pParent, AFX_IDW_PANE_FIRST, NULL))
 #endif 
 		//if( !pFormView->CreateEx( 0, AfxRegisterWndClass(0, 0, 0, 0), NULL, 
 		// WS_CHILD | WS_VISIBLE, CRect( 0, 0, 205, 157), pParent, -1, pContext) ) 
@@ -123,7 +126,9 @@ void CConfigView::AssertValid() const
 
 CMCADoc* CConfigView::GetDocument() // non-debug version is inline
 {
-    ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CMCADoc)));
+	// the config view is not associated with te camera view yet
+	if (NULL == m_pDocument || !(m_pDocument->IsKindOf(RUNTIME_CLASS(CMCADoc))))
+		return m_dummyDoc;
     return (CMCADoc*)m_pDocument;
 }
 

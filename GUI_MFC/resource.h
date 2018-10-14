@@ -112,6 +112,8 @@
 #define IDC_GAIN_STATIC                 1004
 #define IDC_TESTIMAGE_COMBO             1005
 #define IDC_PIXELFORMAT_COMBO           1006
+#define IDC_RESOLUTION_X		        1007
+#define IDC_RESOLUTION_Y		        1008
 #define IDS_FILTER_IMAGETYPES           1024
 #define ID_CAMERA_GRABONE               32773
 #define ID_CAMERA_STARTGRABBING         32774
