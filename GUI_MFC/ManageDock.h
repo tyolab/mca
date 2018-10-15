@@ -14,6 +14,10 @@ public:
 	CManageDock();
 	virtual ~CManageDock();
 
+	CConfigView *getConfigView() {
+		return m_wndManagePanel;
+	}
+
 protected:
 	DECLARE_MESSAGE_MAP()
 

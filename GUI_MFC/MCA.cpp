@@ -263,10 +263,20 @@ void CMCAApp::OnOpenCamera()
 
     // Open the document and use the full name of the device as the filename.
     CDocument* pNewDoc = pDocTemplate->OpenDocumentFile(m_strDeviceFullName, TRUE);
+
     if (pNewDoc == NULL)
     {
         CString strErrorMessage;
         strErrorMessage.Format(_T("Could not open camera \"%s\""), m_strDeviceFullName);
         AfxMessageBox(strErrorMessage);
     }
+	else {
+		// Get the config view
+		CMainFrame* mainFrm = reinterpret_cast<CMainFrame*>(GetMainWnd());
+		CConfigView* configView = mainFrm->getConfigView();
+		pNewDoc->AddView(configView);
+		CMCADoc* pDoc = reinterpret_cast<CMCADoc*>(pNewDoc);
+		pDoc->RegisterListeners();
+		pDoc->OnUpdateNodes();
+	}
 }

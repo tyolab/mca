@@ -60,24 +60,7 @@ BOOL CMCADoc::OnNewDocument()
     if (!CDocument::OnNewDocument())
         return FALSE;
 
-    try
-    {
-        // Register this object as an image event handler, so we will be notified of new new images
-        // See Pylon::CImageEventHandler for details
-        m_camera.RegisterImageEventHandler(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
-        // Register this object as a configuration event handler, so we will be notified of camera state changes.
-        // See Pylon::CConfigurationEventHandler for details
-        m_camera.RegisterConfiguration(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
-    }
-    catch (const Pylon::GenericException& e)
-    {
-        TRACE(CUtf82W(e.what()));
-        return FALSE;
-
-        UNUSED(e);
-    }
-
-    return TRUE;
+	return RegisterListeners();
 }
 
 
@@ -681,6 +664,28 @@ void CMCADoc::SetPathName(LPCTSTR lpszPathName, BOOL /* bAddToMRU */)
     ASSERT_VALID(this);
 
     SetTitle(lpszPathName);
+}
+
+BOOL CMCADoc::RegisterListeners()
+{
+	try
+	{
+		// Register this object as an image event handler, so we will be notified of new new images
+		// See Pylon::CImageEventHandler for details
+		m_camera.RegisterImageEventHandler(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
+		// Register this object as a configuration event handler, so we will be notified of camera state changes.
+		// See Pylon::CConfigurationEventHandler for details
+		m_camera.RegisterConfiguration(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
+	}
+	catch (const Pylon::GenericException& e)
+	{
+		TRACE(CUtf82W(e.what()));
+		return FALSE;
+
+		UNUSED(e);
+	}
+
+	return TRUE;
 }
 
 // Save the image to disk.

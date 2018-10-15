@@ -38,7 +38,6 @@ public:
     virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual BOOL LoadFrame(UINT nIDResource, DWORD dwDefaultStyle = WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, CWnd* pParentWnd = nullptr, CCreateContext* pContext = nullptr);
 
-
 // Implementation
 public:
     virtual ~CMainFrame();
@@ -47,6 +46,10 @@ public:
     virtual void AssertValid() const;
     virtual void Dump(CDumpContext& dc) const;
 #endif
+
+	CConfigView* getConfigView() {
+		return m_wndManageDock.getConfigView();
+	}
 
 protected:  // control bar embedded members
     CMFCStatusBar  m_wndStatusBar;

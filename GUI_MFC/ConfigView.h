@@ -42,7 +42,12 @@ public:
 #endif
 
 private:
-	CMCADoc *m_dummyDoc;
+	CMCADoc* m_dummyDoc;
+
+public:
+	CMCADoc* GetRealDoc() {
+		return reinterpret_cast<CMCADoc*>(m_pDocument);
+	}
 
     // Attributes
 protected:
@@ -87,6 +92,8 @@ public:
 #ifndef _DEBUG  // debug version in CConfigView.cpp
 inline CMCADoc* CConfigView::GetDocument()
 {
+	if (NULL == m_pDocument)
+		return m_dummyDoc;
     return reinterpret_cast<CMCADoc*>(m_pDocument);
 }
 #endif

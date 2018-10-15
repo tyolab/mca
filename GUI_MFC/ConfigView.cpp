@@ -127,7 +127,7 @@ void CConfigView::AssertValid() const
 CMCADoc* CConfigView::GetDocument() // non-debug version is inline
 {
 	// the config view is not associated with te camera view yet
-	if (NULL == m_pDocument || !(m_pDocument->IsKindOf(RUNTIME_CLASS(CMCADoc))))
+	 if (NULL == m_pDocument || !(m_pDocument->IsKindOf(RUNTIME_CLASS(CMCADoc))))
 		return m_dummyDoc;
     return (CMCADoc*)m_pDocument;
 }

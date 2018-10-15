@@ -50,6 +50,7 @@ public:
     virtual void Serialize(CArchive& ar);
     virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
     virtual void SetPathName(LPCTSTR lpszPathName, BOOL bAddToMRU = TRUE);
+	virtual BOOL RegisterListeners();
 
 // Implementation
 public:
