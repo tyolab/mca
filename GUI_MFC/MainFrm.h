@@ -49,8 +49,8 @@ public:
 #endif
 
 protected:  // control bar embedded members
-    CStatusBar  m_wndStatusBar;
-    CToolBar    m_wndToolBar;
+    CMFCStatusBar  m_wndStatusBar;
+    CMFCToolBar    m_wndToolBar;
 	//CConfigView m_wndConfigView;
 	CManageDock m_wndManageDock;
 

@@ -75,15 +75,26 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     
 	BOOL bNameValid;
 
+	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
+		| CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
+		!m_wndToolBar.LoadToolBar(theApp.m_bHiColorIcons ? IDR_MAINFRAME_256 : IDR_MAINFRAME))
+	{
+		TRACE0("Failed to create toolbar\n");
+		return -1;      // fail to create
+	}
 
+	CString strToolBarName;
+	bNameValid = strToolBarName.LoadString(IDS_TOOLBAR_STANDARD);
+	ASSERT(bNameValid);
+	m_wndToolBar.SetWindowText(strToolBarName);
 
-    if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
-        |  CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
-        !m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
-    {
-        TRACE0("Failed to create toolbar\n");
-        return -1;      // fail to create
-    }
+	CString strCustomize;
+	bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	ASSERT(bNameValid);
+	m_wndToolBar.EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+
+	// Allow user-defined toolbars operations:
+	InitUserToolbars(nullptr, uiFirstUserToolBarId, uiLastUserToolBarId);
 
     if (!m_wndStatusBar.Create(this) ||
         !m_wndStatusBar.SetIndicators(indicators,
@@ -107,9 +118,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	 DockPane(&m_wndManageDock);
 
     // TODO: Delete these three lines if you don't want the toolbar to be dockable
-    //m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
-    //EnableDocking(CBRS_ALIGN_ANY);
-    //DockControlBar(&m_wndToolBar);
+    m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
+    EnableDocking(CBRS_ALIGN_ANY);
+    DockPane(&m_wndToolBar);
 
     return 0;
 }
@@ -197,12 +208,12 @@ LRESULT CMainFrame::OnToolbarCreateNew(WPARAM wp, LPARAM lp)
 	CMFCToolBar* pUserToolbar = (CMFCToolBar*)lres;
 	ASSERT_VALID(pUserToolbar);
 
-	//BOOL bNameValid;
-	//CString strCustomize;
-	//bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
-	//ASSERT(bNameValid);
+	BOOL bNameValid;
+	CString strCustomize;
+	bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
+	ASSERT(bNameValid);
 
-	//pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
+	pUserToolbar->EnableCustomizeButton(TRUE, ID_VIEW_CUSTOMIZE, strCustomize);
 	return lres;
 }
 
@@ -219,7 +230,6 @@ BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParent
 	{
 		return FALSE;
 	}
-
 
 	 //enable customization button for all user toolbars
 	BOOL bNameValid;

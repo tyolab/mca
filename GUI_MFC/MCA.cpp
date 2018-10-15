@@ -229,6 +229,25 @@ CString CMCAApp::SetDeviceFullName(LPCTSTR lpszFullDeviceName)
     return oldValue;
 }
 
+void CMCAApp::GetAllDocuments(DocsPtrList & listDocs)
+{
+	// clear the list
+	listDocs.RemoveAll();
+	// loop through application's document templates
+	POSITION posDocTemplate = GetFirstDocTemplatePosition();
+	while (NULL != posDocTemplate)
+	{
+		CDocTemplate* pDocTemplate = GetNextDocTemplate(posDocTemplate);
+
+		// get each document open in given document template
+		POSITION posDoc = pDocTemplate->GetFirstDocPosition();
+		while (NULL != posDoc)
+		{
+			CDocument* pDoc = pDocTemplate->GetNextDoc(posDoc);
+			listDocs.AddTail(pDoc); // add document to list
+		}
+	}
+}
 
 void CMCAApp::OnOpenCamera()
 {

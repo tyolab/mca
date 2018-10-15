@@ -14,11 +14,18 @@
 
 #include "resource.h"       // main symbols
 
+typedef CTypedPtrList<CObList, CDocument*> DocsPtrList;
+
+class CMCADoc;
+
 // CMCAApp:
 // See MCA.cpp for the implementation of this class
 //
 class CMCAApp : public CWinAppEx
 {
+public:
+	static const size_t c_maxCamerasToUse = 2;
+
 public:
     CMCAApp();
 
@@ -39,12 +46,20 @@ public:
     const Pylon::DeviceInfoList_t& GetDeviceInfoList() const;
     int EnumerateDevices();
     CString CMCAApp::SetDeviceFullName(LPCTSTR lpszFullDeviceName);
+	void GetAllDocuments(DocsPtrList& listDocs);
 
 private:
 
     // List of all attached devices
     Pylon::DeviceInfoList_t m_devices;
     CString m_strDeviceFullName;
+
+	// make things simple
+	// camera doc #1
+	CMCADoc *m_cameraDoc1;
+
+	// camera doc #2
+	CMCADoc *m_cameraDoc2;
 
 public:
     afx_msg void OnOpenCamera();
