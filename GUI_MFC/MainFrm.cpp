@@ -117,6 +117,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	 m_wndManageDock.EnableDocking(CBRS_ALIGN_ANY);
 	 DockPane(&m_wndManageDock);
 
+	 m_wndManageDock2.EnableDocking(CBRS_ALIGN_ANY);
+	 DockPane(&m_wndManageDock2);
+
     // TODO: Delete these three lines if you don't want the toolbar to be dockable
     m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
     EnableDocking(CBRS_ALIGN_ANY);
@@ -283,12 +286,21 @@ BOOL CMainFrame::CreateDockingWindows()
 	CRect rc;
 	GetClientRect(&rc);
 
-	if (!m_wndManageDock.Create(_T("Camera Configuration"), this, CRect(0, 0, 300, rc.Height()), TRUE, ID_VIEW_MANAGEDOCK,
+	if (!m_wndManageDock.Create(_T("Camera #1 Configuration"), this, CRect(0, 0, 300, rc.Height()), TRUE, ID_VIEW_CONFIG1,
 		         WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT | CBRS_FLOAT_MULTI))
 	{
 	    TRACE0("failed config view\n");
 		return FALSE;
 	}
+	m_wndManageDock.getConfigView()->SetID(0);
+
+	if (!m_wndManageDock2.Create(_T("Camera #2 Configuration"), this, CRect(0, 0, 300, rc.Height()), TRUE, ID_VIEW_CONFIG2,
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("failed config view\n");
+		return FALSE;
+	}
+	m_wndManageDock2.getConfigView()->SetID(1);
 
 	SetDockingWindowIcons(theApp.m_bHiColorIcons);
 

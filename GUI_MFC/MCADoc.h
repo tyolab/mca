@@ -85,6 +85,14 @@ public:
     virtual void OnGrabError(Pylon::CInstantCamera& camera, const char* errorMessage);
     virtual void OnCameraDeviceRemoved(Pylon::CInstantCamera& camera);
 
+	void SetID(int id) {
+		m_id = id;
+	}
+
+	int GetID() {
+		return m_id;
+	}
+
 protected:
     mutable CCriticalSection m_MemberLock;
     uint64_t m_cntGrabbedImages;
@@ -92,6 +100,7 @@ protected:
     uint64_t m_cntGrabErrors;
 
 private:
+	int			 m_id;
     // The camera
     Pylon::CInstantCamera m_camera;
     // The grab result retrieved from the camera

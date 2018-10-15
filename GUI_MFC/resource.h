@@ -104,6 +104,9 @@
 #define IDS_FIND_TAB				302
 #define IDS_EXPLORER				305
 #define IDS_EDIT_MENU				306
+#define ID_VIEW_CONFIG1				400
+#define ID_VIEW_CONFIG2				401
+
 #define IDC_DEVICELIST                  1000
 #define IDC_EXPOSURE_SLIDER             1001
 #define IDC_EXPOSURE_EDIT               1002

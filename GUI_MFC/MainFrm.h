@@ -25,7 +25,6 @@ public:
 
 // Attributes
 protected:
-    CSplitterWnd m_wndSplitter;
 	CSplitterWnd m_wndSplitter2;
 public:
 
@@ -47,15 +46,26 @@ public:
     virtual void Dump(CDumpContext& dc) const;
 #endif
 
-	CConfigView* getConfigView() {
+	CConfigView* getConfigViewCamera1() {
 		return m_wndManageDock.getConfigView();
 	}
+
+	CConfigView* getConfigViewCamera2() {
+		return m_wndManageDock2.getConfigView();
+	}
+
 
 protected:  // control bar embedded members
     CMFCStatusBar  m_wndStatusBar;
     CMFCToolBar    m_wndToolBar;
 	//CConfigView m_wndConfigView;
+
+	// Camera Config 
 	CManageDock m_wndManageDock;
+
+	// Camera Config #1
+	CManageDock m_wndManageDock2;
+
 
 // Generated message map functions
 protected:

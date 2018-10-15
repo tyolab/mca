@@ -58,6 +58,7 @@ CConfigView::CConfigView()
 , m_updatingList( FALSE )
 {
 	m_dummyDoc = new CMCADoc;
+	m_id = -1;
 }
 
 
@@ -244,24 +245,27 @@ void CConfigView::FillDeviceListCtrl()
     const Pylon::DeviceInfoList_t& devices = theApp.GetDeviceInfoList();
     if (!devices.empty())
     {
-        int i = 0;
-        for (Pylon::DeviceInfoList_t::const_iterator it = devices.begin(); it != devices.end(); ++it)
-        {
-            // Get the pointer to the current device info.
-            const Pylon::CDeviceInfo* const pDeviceInfo = &(*it);
+        int i = 0, count = 0;
+		for (Pylon::DeviceInfoList_t::const_iterator it = devices.begin(); it != devices.end(); ++it)
+		{
+			// Get the pointer to the current device info.
+			const Pylon::CDeviceInfo* const pDeviceInfo = &(*it);
 
-            // Add the item to the list.
-            int nItem = m_deviceListCtrl.InsertItem( i++, CUtf82W( pDeviceInfo->GetFriendlyName() ) );
+			if (m_id > -1 && count == m_id) {
+				// Add the item to the list.
+				int nItem = m_deviceListCtrl.InsertItem(i++, CUtf82W(pDeviceInfo->GetFriendlyName()));
 
-            // Remember the pointer to the device info.
-            m_deviceListCtrl.SetItemData( nItem, (DWORD_PTR) pDeviceInfo );
+				// Remember the pointer to the device info.
+				m_deviceListCtrl.SetItemData(nItem, (DWORD_PTR)pDeviceInfo);
 
-            // Restore selection if necessary.
-            if (pDeviceInfo->GetFullName() == fullNameSelected)
-            {
-                m_deviceListCtrl.SetItemState( nItem, LVIS_SELECTED, LVIS_SELECTED );
-                m_deviceListCtrl.SetSelectionMark( nItem );
-            }
+				// Restore selection if necessary.
+				if (pDeviceInfo->GetFullName() == fullNameSelected)
+				{
+					m_deviceListCtrl.SetItemState(nItem, LVIS_SELECTED, LVIS_SELECTED);
+					m_deviceListCtrl.SetSelectionMark(nItem);
+				}
+			}
+			++count;
         }
     }
 
@@ -302,7 +306,7 @@ void CConfigView::OnItemchangedDevicelist( NMHDR *pNMHDR, LRESULT *pResult )
         // To use the MFC document/view services, we need to pass the full name to the app class.
         // This way, the app class can pass it to the OpenDocumentFile function.
         CString strFullname(CUtf82W( m_fullNameSelected.c_str() ));
-        if (theApp.SetDeviceFullName( strFullname ) != strFullname)
+        if (theApp.SetDeviceFullName( strFullname, GetID() ) != strFullname)
         {
             theApp.GetMainWnd()->PostMessage( WM_COMMAND, MAKEWPARAM( ID_OPEN_CAMERA, 0 ), 0 );
         }

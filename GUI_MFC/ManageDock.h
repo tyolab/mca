@@ -7,6 +7,9 @@ class CManageDock :
 {
 	DECLARE_DYNAMIC(CManageDock)
 
+private:
+	CSplitterWnd m_wndSplitter;
+
 public:
 	CConfigView *m_wndManagePanel;
 	
@@ -17,6 +20,9 @@ public:
 	CConfigView *getConfigView() {
 		return m_wndManagePanel;
 	}
+
+	/*CConfigView *getConfigViewCamera();
+	CConfigView *getConfigViewCamera2();*/
 
 protected:
 	DECLARE_MESSAGE_MAP()

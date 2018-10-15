@@ -43,10 +43,18 @@ public:
 
 private:
 	CMCADoc* m_dummyDoc;
-
+	int			 m_id;
 public:
 	CMCADoc* GetRealDoc() {
 		return reinterpret_cast<CMCADoc*>(m_pDocument);
+	}
+
+	void SetID(int id) {
+		m_id = id;
+	}
+
+	int GetID() {
+		return m_id;
 	}
 
     // Attributes

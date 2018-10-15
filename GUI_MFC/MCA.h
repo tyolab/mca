@@ -18,6 +18,8 @@ typedef CTypedPtrList<CObList, CDocument*> DocsPtrList;
 
 class CMCADoc;
 
+#include "CameraInfo.h"
+
 // CMCAApp:
 // See MCA.cpp for the implementation of this class
 //
@@ -38,6 +40,9 @@ public:
 	BOOL  m_bHiColorIcons;
 
     afx_msg void OnAppAbout();
+	afx_msg void OnGrabOne();
+	afx_msg void OnStartGrabbing();
+
     DECLARE_MESSAGE_MAP()
     virtual int ExitInstance();
 
@@ -45,21 +50,23 @@ public:
 public:
     const Pylon::DeviceInfoList_t& GetDeviceInfoList() const;
     int EnumerateDevices();
-    CString CMCAApp::SetDeviceFullName(LPCTSTR lpszFullDeviceName);
+    CString CMCAApp::SetDeviceFullName(LPCTSTR lpszFullDeviceName, int id = -1);
 	void GetAllDocuments(DocsPtrList& listDocs);
+	
 
 private:
 
     // List of all attached devices
     Pylon::DeviceInfoList_t m_devices;
     CString m_strDeviceFullName;
+	int		m_currentDeviceID; // 0, 1, ...
 
 	// make things simple
-	// camera doc #1
-	CMCADoc *m_cameraDoc1;
+	// camera info #1
+	CCameraInfo m_cameraInfo1;
 
-	// camera doc #2
-	CMCADoc *m_cameraDoc2;
+	// camera info #2
+	CCameraInfo m_cameraInfo2;
 
 public:
     afx_msg void OnOpenCamera();

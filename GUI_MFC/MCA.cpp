@@ -15,6 +15,9 @@
 #include "ConfigView.h"
 #include "MCAView.h"
 
+#include <windows.h>
+#include <shlobj.h>
+
 #include <pylon/PylonIncludes.h>
 #ifdef PYLON_WIN_BUILD
 #    include <pylon/PylonGUI.h>
@@ -26,6 +29,7 @@
 
 // CMCAApp
 BEGIN_MESSAGE_MAP(CMCAApp, CWinApp)
+	ON_COMMAND(ID_CAMERA_GRABONE, &CMCAApp::OnGrabOne)
     ON_COMMAND(ID_APP_ABOUT, &CMCAApp::OnAppAbout)
     // Standard file based document commands
     ON_COMMAND(ID_FILE_NEW, &CWinApp::OnFileNew)
@@ -38,6 +42,8 @@ CMCAApp::CMCAApp()
 {
     // TODO: add construction code here,
     // Place all significant initialization in InitInstance
+	m_cameraInfo1.SetID(0);
+	m_cameraInfo2.SetID(1);
 }
 
 // The one and only CMCAApp object
@@ -188,6 +194,16 @@ void CMCAApp::OnAppAbout()
     aboutDlg.DoModal();
 }
 
+void CMCAApp::OnGrabOne()
+{
+	m_cameraInfo1.GrabOne();
+	m_cameraInfo2.GrabOne();
+}
+
+void CMCAApp::OnStartGrabbing()
+{
+}
+
 // CMCAApp message handlers
 const Pylon::DeviceInfoList_t& CMCAApp::GetDeviceInfoList() const
 {
@@ -222,10 +238,17 @@ int CMCAApp::EnumerateDevices()
 }
 
 // Will be called to pass the full name of the camera selected in the device list control.
-CString CMCAApp::SetDeviceFullName(LPCTSTR lpszFullDeviceName)
+CString CMCAApp::SetDeviceFullName(LPCTSTR lpszFullDeviceName, int id)
 {
     CString oldValue = m_strDeviceFullName;
     m_strDeviceFullName = lpszFullDeviceName;
+	m_currentDeviceID = id;
+
+	if (id == 0)
+		m_cameraInfo1.m_strDeviceFullName = lpszFullDeviceName;
+	else if (id == 1)
+		m_cameraInfo2.m_strDeviceFullName = lpszFullDeviceName;
+		
     return oldValue;
 }
 
@@ -273,10 +296,25 @@ void CMCAApp::OnOpenCamera()
 	else {
 		// Get the config view
 		CMainFrame* mainFrm = reinterpret_cast<CMainFrame*>(GetMainWnd());
-		CConfigView* configView = mainFrm->getConfigView();
-		pNewDoc->AddView(configView);
-		CMCADoc* pDoc = reinterpret_cast<CMCADoc*>(pNewDoc);
-		pDoc->RegisterListeners();
-		pDoc->OnUpdateNodes();
+		CConfigView* configView = NULL;
+		CCameraInfo* pCameraInfo = NULL;
+
+		if (m_currentDeviceID == 0) {
+			configView = mainFrm->getConfigViewCamera1();
+			pCameraInfo = &m_cameraInfo1;
+		}
+		else if (m_currentDeviceID == 1) {
+			configView = mainFrm->getConfigViewCamera2();
+			pCameraInfo = &m_cameraInfo1;
+		}
+		if (NULL != configView) {
+			pNewDoc->AddView(configView);
+			CMCADoc* pDoc = reinterpret_cast<CMCADoc*>(pNewDoc);
+			pDoc->RegisterListeners();
+			pDoc->OnUpdateNodes();
+			pDoc->SetID(m_currentDeviceID);
+			pCameraInfo->m_pCameraDoc = pDoc;
+			pCameraInfo->m_pConfigView = configView;
+		}
 	}
 }
