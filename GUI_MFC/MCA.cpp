@@ -29,7 +29,11 @@
 
 // CMCAApp
 BEGIN_MESSAGE_MAP(CMCAApp, CWinApp)
+	//
 	ON_COMMAND(ID_CAMERA_GRABONE, &CMCAApp::OnGrabOne)
+	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA1, &CMCAApp::OnNewGrabresultCamera1)
+	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA2, &CMCAApp::OnNewGrabresultCamera2)
+	//
     ON_COMMAND(ID_APP_ABOUT, &CMCAApp::OnAppAbout)
     // Standard file based document commands
     ON_COMMAND(ID_FILE_NEW, &CWinApp::OnFileNew)
@@ -204,6 +208,18 @@ void CMCAApp::OnStartGrabbing()
 {
 }
 
+void CMCAApp::OnNewGrabresultCamera1()
+{
+	if (NULL != m_cameraInfo1.m_pCameraDoc)
+		m_cameraInfo1.m_pCameraDoc->OnNewGrabresult();
+}
+
+void CMCAApp::OnNewGrabresultCamera2()
+{
+	if (NULL != m_cameraInfo1.m_pCameraDoc)
+		m_cameraInfo2.m_pCameraDoc->OnNewGrabresult();
+}
+
 // CMCAApp message handlers
 const Pylon::DeviceInfoList_t& CMCAApp::GetDeviceInfoList() const
 {
@@ -280,41 +296,49 @@ void CMCAApp::OnOpenCamera()
         return;
     }
 
-    // We only have one doc template. Get a pointer to it.
-    POSITION pos = GetFirstDocTemplatePosition();
-    CDocTemplate* pDocTemplate = GetNextDocTemplate(pos);
+	// Get the config view
+	CMainFrame* mainFrm = reinterpret_cast<CMainFrame*>(GetMainWnd());
+	CConfigView* configView = NULL;
+	CCameraInfo* pCameraInfo = NULL;
 
-    // Open the document and use the full name of the device as the filename.
-    CDocument* pNewDoc = pDocTemplate->OpenDocumentFile(m_strDeviceFullName, TRUE);
+	if (m_currentDeviceID == 0) {
+		configView = mainFrm->getConfigViewCamera1();
+		pCameraInfo = &m_cameraInfo1;
+	}
+	else if (m_currentDeviceID == 1) {
+		configView = mainFrm->getConfigViewCamera2();
+		pCameraInfo = &m_cameraInfo2;
+	}
 
-    if (pNewDoc == NULL)
-    {
-        CString strErrorMessage;
-        strErrorMessage.Format(_T("Could not open camera \"%s\""), m_strDeviceFullName);
-        AfxMessageBox(strErrorMessage);
-    }
-	else {
-		// Get the config view
-		CMainFrame* mainFrm = reinterpret_cast<CMainFrame*>(GetMainWnd());
-		CConfigView* configView = NULL;
-		CCameraInfo* pCameraInfo = NULL;
+	CDocument* pNewDoc = NULL;
+	if (NULL == pCameraInfo->m_pCameraDoc) {
 
-		if (m_currentDeviceID == 0) {
-			configView = mainFrm->getConfigViewCamera1();
-			pCameraInfo = &m_cameraInfo1;
+		// We only have one doc template. Get a pointer to it.
+		POSITION pos = GetFirstDocTemplatePosition();
+		CDocTemplate* pDocTemplate = GetNextDocTemplate(pos);
+
+		// Open the document and use the full name of the device as the filename.
+		pNewDoc = pDocTemplate->OpenDocumentFile(m_strDeviceFullName, TRUE);
+
+		if (pNewDoc == NULL)
+		{
+			CString strErrorMessage;
+			strErrorMessage.Format(_T("Could not open camera \"%s\""), m_strDeviceFullName);
+			AfxMessageBox(strErrorMessage);
 		}
-		else if (m_currentDeviceID == 1) {
-			configView = mainFrm->getConfigViewCamera2();
-			pCameraInfo = &m_cameraInfo1;
-		}
-		if (NULL != configView) {
-			pNewDoc->AddView(configView);
-			CMCADoc* pDoc = reinterpret_cast<CMCADoc*>(pNewDoc);
-			pDoc->RegisterListeners();
-			pDoc->OnUpdateNodes();
-			pDoc->SetID(m_currentDeviceID);
-			pCameraInfo->m_pCameraDoc = pDoc;
-			pCameraInfo->m_pConfigView = configView;
+		else {
+			if (NULL != configView) {
+				pNewDoc->AddView(configView);
+				CMCADoc* pDoc = reinterpret_cast<CMCADoc*>(pNewDoc);
+				pDoc->SetID(m_currentDeviceID);
+				pDoc->RegisterListeners();
+				pDoc->UpdateTitle();
+				pDoc->OnUpdateNodes();
+				//pDoc->SetModifiedFlag(true);
+				pCameraInfo->m_pCameraDoc = pDoc;
+				pCameraInfo->m_pConfigView = configView;
+			}
 		}
 	}
+	
 }

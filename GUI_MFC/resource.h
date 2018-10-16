@@ -129,6 +129,8 @@
 #define ID_OPEN_CAMERA                  32781
 #define ID_UPDATE_NODES                 32782
 #define ID_FILE_IMAGE_SAVE_AS           32786
+#define ID_NEW_GRABRESULT_CAMERA1       32787
+#define ID_NEW_GRABRESULT_CAMERA2       32788
 
 // Next default values for new objects
 // 

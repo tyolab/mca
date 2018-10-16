@@ -47,6 +47,7 @@ CMCADoc::CMCADoc()
     , m_hExposureTime(NULL)
 {
     // TODO: add one-time construction code here
+	m_id = -1;
 }
 
 
@@ -284,8 +285,16 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     if (pWnd != NULL)
     {
         // You must use PostMessage here to separate the grab thread from the GUI thread.
-        pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT, 0), 0);
+		if (m_id == 0)
+			pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT_CAMERA1, 0), 0);
+		else if (m_id == 1)
+			pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT_CAMERA2, 0), 0);
+		else
+			pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT, 0), 0);
     }
+
+	// you cant do that, this is from pylon thread
+	// OnNewGrabresult();
 }
 
 // Pylon::CConfigurationEventHandler functions
@@ -417,6 +426,20 @@ void CMCADoc::OnCameraDeviceRemoved(Pylon::CInstantCamera& camera)
     catch (Pylon::GenericException)
     {
     }
+}
+
+void CMCADoc::UpdateTitle()
+{
+	CString cameraId;
+	CString csTitle;
+
+	if (m_id > -1) {
+		cameraId.Format(_T("Camera #%d - "), m_id + 1);
+		csTitle = cameraId + m_strPathName;
+		SetTitle(csTitle);
+	}
+	else
+		SetTitle(m_strPathName);
 }
 
 
@@ -658,12 +681,12 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 // because the actual file does not exist.
 void CMCADoc::SetPathName(LPCTSTR lpszPathName, BOOL /* bAddToMRU */)
 {
-    m_strPathName = lpszPathName;
-    ASSERT(!m_strPathName.IsEmpty());
-    m_bEmbedded = FALSE;
-    ASSERT_VALID(this);
+	m_strPathName = lpszPathName;
+	ASSERT(!m_strPathName.IsEmpty());
+	m_bEmbedded = FALSE;
+	ASSERT_VALID(this);
 
-    SetTitle(lpszPathName);
+	UpdateTitle();
 }
 
 BOOL CMCADoc::RegisterListeners()

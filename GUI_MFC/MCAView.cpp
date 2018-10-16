@@ -183,5 +183,6 @@ void CMCAView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* /*pHint*/)
         // Repaint this view.
         // This will invoke OnDraw().
         Invalidate();
+		//UpdateWindow();
     }
 }

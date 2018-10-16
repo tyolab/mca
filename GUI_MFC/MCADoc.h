@@ -93,6 +93,8 @@ public:
 		return m_id;
 	}
 
+	void UpdateTitle();
+
 protected:
     mutable CCriticalSection m_MemberLock;
     uint64_t m_cntGrabbedImages;
@@ -101,6 +103,8 @@ protected:
 
 private:
 	int			 m_id;
+	CString		 m_title;
+
     // The camera
     Pylon::CInstantCamera m_camera;
     // The grab result retrieved from the camera
