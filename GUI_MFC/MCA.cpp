@@ -18,6 +18,9 @@
 #include <windows.h>
 #include <shlobj.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include <pylon/PylonIncludes.h>
 #ifdef PYLON_WIN_BUILD
 #    include <pylon/PylonGUI.h>
@@ -31,6 +34,8 @@
 BEGIN_MESSAGE_MAP(CMCAApp, CWinApp)
 	//
 	ON_COMMAND(ID_CAMERA_GRABONE, &CMCAApp::OnGrabOne)
+	ON_COMMAND(ID_CAMERA_STARTGRABBING, &CMCAApp::OnStartGrabbing)
+
 	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA1, &CMCAApp::OnNewGrabresultCamera1)
 	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA2, &CMCAApp::OnNewGrabresultCamera2)
 	//
@@ -206,6 +211,8 @@ void CMCAApp::OnGrabOne()
 
 void CMCAApp::OnStartGrabbing()
 {
+	m_cameraInfo1.GrabMore();
+	m_cameraInfo2.GrabMore();
 }
 
 void CMCAApp::OnNewGrabresultCamera1()

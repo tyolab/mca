@@ -162,6 +162,8 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
         UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
+
+		Invalidate();
     }
 }
 
