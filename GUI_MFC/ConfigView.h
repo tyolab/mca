@@ -71,6 +71,15 @@ protected:
 private:
     // Device list control
     CListCtrl m_deviceListCtrl;
+
+	CSliderCtrl m_ctrlWidthSlider;
+	// Width text control
+	CStatic m_ctrlWidthText;
+
+	CSliderCtrl m_ctrlHeightSlider;
+	// Height text control
+	CStatic m_ctrlHeightText;
+
     // Exposure time slider
     CSliderCtrl m_ctrlExposureSlider;
     // Exposure time text control
@@ -79,6 +88,15 @@ private:
     CSliderCtrl m_ctrlGainSlider;
     // Gain text control
     CStatic m_ctrlGainText;
+
+	CSliderCtrl m_ctrlFrameRateSlider;
+	// FrameRate time text control
+	CStatic m_ctrlFrameRateText;
+
+	CSliderCtrl m_ctrlDurationSlider;
+	// Duration time text control
+	CStatic m_ctrlDurationText;
+
     // Test image selector
     CComboBox m_ctrlTestImage;
     // Pixel format selector

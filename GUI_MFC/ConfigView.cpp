@@ -99,6 +99,8 @@ void CConfigView::DoDataExchange( CDataExchange* pDX )
 {
     CFormView::DoDataExchange( pDX );
     DDX_Control( pDX, IDC_DEVICELIST, m_deviceListCtrl );
+	DDX_Control(pDX, IDC_EXPOSURE_SLIDER, m_ctrlExposureSlider);
+	DDX_Control(pDX, IDC_EXPOSURE_STATIC, m_ctrlExposureText);
     DDX_Control( pDX, IDC_EXPOSURE_SLIDER, m_ctrlExposureSlider );
     DDX_Control( pDX, IDC_EXPOSURE_STATIC, m_ctrlExposureText );
     DDX_Control( pDX, IDC_GAIN_SLIDER, m_ctrlGainSlider );

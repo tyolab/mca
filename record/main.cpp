@@ -1,3 +1,5 @@
+// https://www.optophysiology.uni-freiburg.de/Howto/howto_high_framerate_recordings
+
 // (c) A. Hanuschkin, 2017
 // compile with -std=c++11  because of to_string usage!
 #include <pylon/PylonIncludes.h>
@@ -5,10 +7,15 @@
 typedef Pylon::CBaslerUsbInstantCamera Camera_t;
 using namespace Basler_UsbCameraParams;
 using namespace Pylon;
+using namespace GenApi;
 
 #include <iostream>
+
+#ifdef WITH_CV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#endif
+
 #include <ctime> // tic toc..
 #include <string> // use strings
 #include <sys/stat.h> // check if dir exist
@@ -30,6 +37,16 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+	// using pylon video recorder
+	if (!CVideoWriter::IsSupported())
+	{
+		std::cout << "VideoWriter is not supported at the moment. Please install the pylon Supplementary Package for MPEG-4 which is available on the Basler website." << endl;
+		// Releases all pylon resources. 
+		PylonTerminate();
+		// Return with error code 1.
+		return 1;
+	}
+
 	// The exit code of the sample application.
 	int exitCode = 0;
 	bool showvid = true; // show the video while recording
@@ -39,9 +56,14 @@ int main(int argc, char* argv[])
 	string filename;
 	string spacer;
 
+#ifdef WITH_CV
 	// store the frames in cv::Mat
 	cv::Mat frame;
 	cv::Mat mats[c_countOfImagesToGrab];
+#else
+
+	CGrabResultPtr results[c_countOfImagesToGrab];
+#endif
 
 	// check if frame dir exist
 	struct stat sb;
@@ -69,6 +91,10 @@ int main(int argc, char* argv[])
 	// Open the camera for accessing the parameters.
 	camera.Open();
 
+	CIntegerPtr width(camera.GetNodeMap().GetNode("Width"));
+	CIntegerPtr height(camera.GetNodeMap().GetNode("Height"));
+	CEnumerationPtr pixelFormat(camera.GetNodeMap().GetNode("PixelFormat"));
+
 	// Get camera device information.
 	cout << "Camera Device Information" << endl
 		<< "=========================" << endl;
@@ -85,6 +111,8 @@ int main(int argc, char* argv[])
 	cout << "Exposure time : " << camera.ExposureTime.GetValue() << endl;
 	cout << "FPS           : " << camera.AcquisitionFrameRate.GetValue() << endl;
 	cout << "MaxNumBuffer  : " << camera.MaxNumBuffer.GetValue() << endl;
+	cout << "Width         : " << width->GetValue() << endl;
+	cout << "Height        : " << height->GetValue() << endl;
 
 	if (IsWritable(camera.GainAuto))
 	{
@@ -96,8 +124,10 @@ int main(int argc, char* argv[])
 		<< "; Max: " << camera.Gain.GetMax() << ")" << endl;
 	camera.Gain.SetValue(0.0);
 	camera.ExposureTime.SetValue(1500);
-	camera.AcquisitionFrameRate.SetValue(500.0); // set frame rate
+	camera.AcquisitionFrameRate.SetValue(200.0); // set frame rate
 	camera.MaxNumBuffer.SetValue(c_countOfImagesToGrab);
+	camera.Width.SetValue(800);
+	camera.Height.SetValue(640);
 	// The number of empty buffers that are not used for grabbing yet.
 	//camera.NumEmptyBuffers.SetValue(1000); 
 	// The size of the grab result buffer output queue.
@@ -111,10 +141,10 @@ int main(int argc, char* argv[])
 	{
 		camera.GrabLoopThreadPriorityOverride = true;
 		//cout << "set GrabLoopThreadPriorityOverwrite" << endl;
+			//cout << "set GrabLoopThreadPriority" << endl;
+	// camera.GrabLoopThreadPriority.SetValue(34);
 	}
 	else { cout << "NOTE: cannot set GrabLoopThreadPriority" << endl; }
-	//cout << "set GrabLoopThreadPriority" << endl;
-	camera.GrabLoopThreadPriority.SetValue(94);
 
 	cout << "InternalGrabEngineThreadPriority: "
 		<< camera.InternalGrabEngineThreadPriority.GetValue() << endl;
@@ -122,13 +152,13 @@ int main(int argc, char* argv[])
 	{
 		camera.InternalGrabEngineThreadPriorityOverride = true;
 		//cout << "set InternalGrabEngineThreadPriorityOverwrite" << endl;
+			//cout << "set InternalGrabEngineThreadPriority" << endl;
+	//camera.InternalGrabEngineThreadPriority.SetValue(35);
 	}
 	else {
 		cout << "NOTE: cannot set InternalGrabEngineThreadPriorityOverride"
 			<< endl;
 	}
-	//cout << "set InternalGrabEngineThreadPriority" << endl;
-	camera.InternalGrabEngineThreadPriority.SetValue(95);
 
 	cout << endl << "New settings" << endl;
 	cout << "=================" << endl;
@@ -140,6 +170,8 @@ int main(int argc, char* argv[])
 	cout << "GrabLoopPriority:" << camera.GrabLoopThreadPriority.GetValue() << endl;
 	cout << "IntGEPriority :  " << camera.InternalGrabEngineThreadPriority.GetValue()
 		<< endl;
+	cout << "Width         : " << camera.Width.GetValue() << endl;
+	cout << "Height        : " << camera.Height.GetValue() << endl;
 
 	// Number of images to be grabbed.
 	time_t tstart = 0, tstartgrab = time(0);
@@ -169,17 +201,21 @@ int main(int argc, char* argv[])
 		if (ptrGrabResult->GrabSucceeded())
 		{
 			// Access the image data.
+			results[cnt_frames] = ptrGrabResult;
 			uint8_t *pImageBuffer = (uint8_t *)ptrGrabResult->GetBuffer();
+
+#ifdef WITH_CV
 			cv::Mat mat(480, 640, CV_8UC1, pImageBuffer);
 			mats[cnt_frames] = mat.clone();
 			if (showvid && cnt_frames % 50 == 0) {
 				// convert to Mat
 				tstart = time(0);
-				cv::imshow("Display window", mats[cnt_frames]); // Show our image inside it.
+				//cv::imshow("Display window", mats[cnt_frames]); // Show our image inside it.
 				dt += time(0) - tstart;
 				cv::waitKey(waitKeyValue);
 				cnt_frames_shown++;
 			}
+#endif
 			cnt_frames++;
 		}
 		else
@@ -198,11 +234,12 @@ int main(int argc, char* argv[])
 	cout << "<t> total per frame:   " << \
 		(time(0) - tstartgrab) / float(c_countOfImagesToGrab) << endl;
 	cout << "<t> image aquisition:  " << dt_rec / float(cnt_frames) << endl;
-	cout << "<t> conversion to Mat: " << dt / float(cnt_frames_shown) << endl;
+	//cout << "<t> conversion to Mat: " << dt / float(cnt_frames_shown) << endl;
 	cout << "Close the camera." << endl;
 
+#ifdef WITH_CV
 	// save to video
-	const string NAME = "test.h264";
+	const string NAME = "test.avi";
 	cv::VideoWriter outputVideo;
 	cv::Size frame_prop;
 	frame_prop.width = 640;
@@ -210,32 +247,81 @@ int main(int argc, char* argv[])
 	double fps = 25.;
 	bool color = false;
 
+	//CV_FOURCC('P', 'I', 'M', '1') = MPEG - 1 codec
+
+	//CV_FOURCC('M', 'J', 'P', 'G') = motion - jpeg codec(does not work well)
+
+	//CV_FOURCC('M', 'P', '4', '2') = MPEG - 4.2 codec
+
+	//CV_FOURCC('D', 'I', 'V', '3') = MPEG - 4.3 codec
+
+	//CV_FOURCC('D', 'I', 'V', 'X') = MPEG - 4 codec
+
+	//CV_FOURCC('U', '2', '6', '3') = H263 codec
+
+	//CV_FOURCC('I', '2', '6', '3') = H263I codec
+
+	//CV_FOURCC('F', 'L', 'V', '1') = FLV1 codec
 	outputVideo.open(NAME,
-		CV_FOURCC('P', 'I', 'M', '1'),
+		CV_FOURCC('D', 'I', 'V', '3'),
+		//CV_FOURCC('P', 'I', 'M', '1'),
 		//CV_FOURCC('X','2','6','4'),
 		fps,
 		frame_prop,
 		color);
+#else
 
-	if (stat(cstr_dir, &sb) == 0 && S_ISDIR(sb.st_mode)) {
+	// Create a video writer object.
+	CVideoWriter videoWriter;
+
+	// The frame rate used for playing the video (playback frame rate).
+	const int cFramesPerSecond = 20;
+	// The quality used for compressing the video.
+	const uint32_t cQuality = 90;
+
+	// Map the pixelType
+	CPixelTypeMapper pixelTypeMapper(pixelFormat);
+	EPixelType pixelType = pixelTypeMapper.GetPylonPixelTypeFromNodeValue(pixelFormat->GetIntValue());
+	// Open the video writer.
+			// Set parameters before opening the video writer.
+	videoWriter.SetParameter(
+		(uint32_t)width->GetValue(),
+		(uint32_t)height->GetValue(),
+		pixelType,
+		cFramesPerSecond,
+		cQuality);
+	videoWriter.Open("_TestVideo.mp4");
+#endif
+
+	// if (stat(cstr_dir, &sb) == 0 && S_ISDIR(sb.st_mode)) {
 		cout << "Writing the frames to files.. this might take some time..." << endl;
 		for (int jj = 0; jj < cnt_frames; ++jj) {
+			
+
+#ifdef WITH_CV
 			frame = mats[jj].clone();
 			outputVideo.write(frame);
+#else
+			videoWriter.Add(results[jj]);
+#endif
 			if (jj < 9) { spacer = "000"; }
 			if ((jj > 9) && (jj < 99)) { spacer = "00"; }
 			if ((jj > 99) && (jj < 999)) { spacer = "0"; }
 			if (jj > 999) { spacer = ""; }
-			filename = dir + "test_f_" + spacer + to_string(jj) + ".png";
-			imwrite(filename, frame);
+			filename = dir + "test_f_" + spacer + to_string(jj) + ".jpeg";
+			//imwrite(filename, frame);
 		}
-	}
-	else {
-		cout << "NOTE: Frames will not be saved. Directory ./frames/ does not exist."
-			<< endl;
-	}
+	//}
+	//else {
+	//	cout << "NOTE: Frames will not be saved. Directory ./frames/ does not exist."
+	//		<< endl;
+	//}
 
-	outputVideo.release();
+#ifdef WITH_CV
+		outputVideo.release();
+#else
+		videoWriter.Close();
+#endif
 
 	// Releases all pylon resources.
 	try {

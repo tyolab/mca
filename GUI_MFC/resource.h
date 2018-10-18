@@ -118,6 +118,19 @@
 #define IDC_RESOLUTION_X		        1007
 #define IDC_RESOLUTION_Y		        1008
 #define IDS_FILTER_IMAGETYPES           1024
+#define IDC_WIDTH_SLIDER             1025
+#define IDC_WIDTH_EDIT               1026
+#define IDC_WIDTH_STATIC               1027
+#define IDC_HEIGHT_SLIDER             1028
+#define IDC_HEIGHT_EDIT               1029
+#define IDC_HEIGHT_STATIC               1030
+#define IDC_FRAME_RATE_SLIDER             1031
+#define IDC_FRAME_RATE_EDIT               1032
+#define IDC_FRAME_RATE_STATIC               1033
+#define IDC_DURATION_SLIDER             1034
+#define IDC_DURATION_EDIT               1035
+#define IDC_DURATION_STATIC               1036
+
 #define ID_CAMERA_GRABONE               32773
 #define ID_CAMERA_STARTGRABBING         32774
 #define ID_VIEW_ENUMERATE               32775
