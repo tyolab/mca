@@ -99,10 +99,16 @@ void CConfigView::DoDataExchange( CDataExchange* pDX )
 {
     CFormView::DoDataExchange( pDX );
     DDX_Control( pDX, IDC_DEVICELIST, m_deviceListCtrl );
+	DDX_Control(pDX, IDC_WIDTH_SLIDER, m_ctrlWidthSlider);
+	DDX_Control(pDX, IDC_WIDTH_STATIC, m_ctrlWidthText);
+    DDX_Control( pDX, IDC_HEIGHT_SLIDER, m_ctrlHeightSlider );
+    DDX_Control( pDX, IDC_HEIGHT_STATIC, m_ctrlHeightText );
+	DDX_Control(pDX, IDC_FRAME_RATE_SLIDER, m_ctrlFrameRateSlider);
+	DDX_Control(pDX, IDC_FRAME_RATE_STATIC, m_ctrlFrameRateText);
 	DDX_Control(pDX, IDC_EXPOSURE_SLIDER, m_ctrlExposureSlider);
 	DDX_Control(pDX, IDC_EXPOSURE_STATIC, m_ctrlExposureText);
-    DDX_Control( pDX, IDC_EXPOSURE_SLIDER, m_ctrlExposureSlider );
-    DDX_Control( pDX, IDC_EXPOSURE_STATIC, m_ctrlExposureText );
+	DDX_Control(pDX, IDC_DURATION_SLIDER, m_ctrlDurationSlider);
+	DDX_Control(pDX, IDC_DURATION_STATIC, m_ctrlDurationText);
     DDX_Control( pDX, IDC_GAIN_SLIDER, m_ctrlGainSlider );
     DDX_Control( pDX, IDC_GAIN_STATIC, m_ctrlGainText );
     DDX_Control( pDX, IDC_TESTIMAGE_COMBO, m_ctrlTestImage );
@@ -155,12 +161,24 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
     if (eHint == UpdateHint_All || (eHint & UpdateHint_Feature))
     {
+		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
+		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+
+		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
+		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+
         // Display the current values.
         UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
         UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
 
         UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain());
         UpdateSliderText(&m_ctrlGainText, GetDocument()->GetGain());
+
+		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
+		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+
+		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
+		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
 
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
         UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
