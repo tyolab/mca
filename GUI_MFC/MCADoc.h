@@ -10,6 +10,8 @@
 */
 #pragma once
 
+#include <pylon/usb/BaslerUsbInstantCamera.h>
+
 // Hints to pass to UpdateAllViews(), so we can update specific parts of the GUI.
 enum EUpdateHint
 {
@@ -42,10 +44,10 @@ public:
     GenApi::IInteger* GetGain();
     GenApi::IEnumeration* GetTestImage();
     GenApi::IEnumeration* GetPixelFormat();
-	const int GetDuration() const {
+	static const int GetDuration() {
 		return m_duration;
 	}
-	void SetDuration(int duration) {
+	static void SetDuration(int duration) {
 		m_duration = duration;
 	}
 
@@ -116,7 +118,7 @@ private:
 	CString		 m_title;
 
     // The camera
-    Pylon::CInstantCamera m_camera;
+    Pylon::CBaslerUsbInstantCamera m_camera;
     // The grab result retrieved from the camera
     Pylon::CGrabResultPtr m_ptrGrabResult;
     // The grab result as a windows DIB to be displayed on the screen

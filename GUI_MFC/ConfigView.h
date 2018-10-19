@@ -66,8 +66,10 @@ protected:
     void UpdateSlider(CSliderCtrl *ctrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1);
 	void UpdateSlider(CSliderCtrl *ctrl, int64_t number, BOOL readable, BOOL writable, int64_t min = -1, int64_t max = -1);
     void UpdateSliderText( CStatic *ctrl, GenApi::IInteger* pInteger );
-	void UpdateSliderText(CStatic *ctrl, uint64_t value);
+	void UpdateSliderText(CStatic *ctrl, uint64_t value, BOOL writable);
+	void UpdateSliderText(CStatic *ctrl, BOOL writable, CString text);
     void UpdateEnumeration( CComboBox *ctrl, GenApi::IEnumeration* pEnum );
+	void UpdateDurationCtrls();
     
     DECLARE_MESSAGE_MAP()
 private:
@@ -106,8 +108,14 @@ private:
     // Remember the full name of the currently selected device so it can be restored in case of new enumeration.
     Pylon::String_t m_fullNameSelected;
     BOOL m_updatingList;
+
+	CConfigView *m_ptrPartnerView;
+
 public:
     UINT OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1);
+	UINT OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum = -1, int64_t maximum = -1, int64_t increment = 1);
+	void setPartnerView(CConfigView *partnerView);
+
     afx_msg void OnItemchangedDevicelist(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg void OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar );
     afx_msg void OnCbnSelendokTestimageCombo();

@@ -192,14 +192,21 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 		UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
 		UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate());
 
-		UpdateSlider(&m_ctrlDurationSlider, GetDocument()->GetDuration(), TRUE, TRUE, DURATION_MIN, DURATION_MAX);
-		UpdateSliderText(&m_ctrlDurationText, GetDocument()->GetDuration());
-
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
         UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
 
+		UpdateDurationCtrls();
+
 		Invalidate();
     }
+}
+
+void CConfigView::UpdateDurationCtrls()
+{
+	BOOL readable, writable;
+	readable = writable = GetDocument() != m_dummyDoc;
+	UpdateSlider(&m_ctrlDurationSlider, CMCADoc::GetDuration(), readable, writable, DURATION_MIN, DURATION_MAX);
+	UpdateSliderText(&m_ctrlDurationText, CMCADoc::GetDuration(), writable);
 }
 
 // Called to update value of slider.
@@ -236,26 +243,37 @@ void CConfigView::UpdateSlider(CSliderCtrl *pCtrl, int64_t number, BOOL readable
 // Called to update the value of a label.
 void CConfigView::UpdateSliderText( CStatic *pString, GenApi::IInteger* pInteger )
 {
-    if (GenApi::IsReadable( pInteger ))
-    {
-        // Set the value as a string in wide character format.
-        pString->SetWindowText(CUtf82W(pInteger->ToString().c_str()));
-    }
-    else
-    {
-        pString->SetWindowText( _T( "n/a" ) );
-    }
+	CString text;
+	BOOL readable = GenApi::IsReadable(pInteger);
+	if (readable)
+		text = CUtf82W(pInteger->ToString().c_str());
+	else
+		text = "n/a";
     pString->EnableWindow( GenApi::IsWritable( pInteger ) );
+	UpdateSliderText(pString, readable, text);
 }
 
 // Called to update the value of a label.
-void CConfigView::UpdateSliderText(CStatic *pString, uint64_t value)
+void CConfigView::UpdateSliderText(CStatic *pString, uint64_t value, BOOL writable)
 {
 	CString strValue;
 	strValue.Format(_T("%d"), value);
 	pString->SetWindowText(strValue);
 
-	pString->EnableWindow(TRUE);
+	pString->EnableWindow(writable);
+}
+
+void CConfigView::UpdateSliderText(CStatic * pString, BOOL readable, CString text)
+{
+	if (readable)
+	{
+		// Set the value as a string in wide character format.
+		pString->SetWindowText(text);
+	}
+	else
+	{
+		pString->SetWindowText(_T("n/a"));
+	}
 }
 
 
@@ -290,7 +308,6 @@ void CConfigView::UpdateEnumeration( CComboBox *pCtrl, GenApi::IEnumeration* pEn
     }
 
 }
-
 
 void CConfigView::FillDeviceListCtrl()
 {
@@ -391,6 +408,10 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 	nPos = OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
 	nPos = OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
 
+	nPos = OnScroll(pScrollBar, &m_ctrlDurationSlider, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX);
+	CMCADoc::SetDuration(nPos);
+	UpdateDurationCtrls();
+
     CFormView::OnHScroll( nSBCode, nPos, pScrollBar );
 }
 
@@ -411,17 +432,42 @@ int64_t RoundTo( int64_t newValue, int64_t oldValue, int64_t minimum, int64_t ma
 }
 
 // Update a slider and set a valid value.
-UINT CConfigView::OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max)
+UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max)
+{
+	BOOL writable = GenApi::IsWritable(pInteger);
+	int64_t value = 0;
+
+	if (writable) {
+		value = pInteger->GetValue();
+		const int64_t minimum = min != -1 ? min : pInteger->GetMin();
+		const int64_t maximum = max != -1 ? max : pInteger->GetMax();
+		const int64_t increment = pInteger->GetInc();
+
+		// Try to set the value. If successful, update the scroll position.
+		try
+		{
+			value = OnScroll(pScrollBar, pCtrl, writable, value, minimum, maximum, increment);
+		}
+		catch (GenICam::GenericException &e)
+		{
+			UNUSED(e);
+			TRACE("Failed to set '%s':%s", pInteger->GetNode()->GetDisplayName().c_str(), e.GetDescription());
+		}
+		catch (...)
+		{
+			TRACE("Failed to set '%s'", pInteger->GetNode()->GetDisplayName().c_str());
+		}
+	}
+	return value;
+}
+UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment)
 {
     if (pScrollBar->GetSafeHwnd() == pCtrl->GetSafeHwnd())
     {
-        if (GenApi::IsWritable( pInteger ))
+        if (writable)
         {   
             // Fetch current value, range, and increment of the camera feature.
-            int64_t value = pInteger->GetValue();
-            const int64_t minimum = min != -1 ? min : pInteger->GetMin();
-            const int64_t maximum = max != -1 ? max : pInteger->GetMax();
-            const int64_t increment = pInteger->GetInc();
+
 
             // Adjust the pointer to the slider to get the correct position.
             int64_t newvalue = 0;
@@ -435,27 +481,20 @@ UINT CConfigView::OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::
                 return 0;
             }
 
-            // Try to set the value. If successful, update the scroll position.
-            try
-            {
-                pInteger->SetValue( roundvalue );
-                pSlider->SetPos( (int) roundvalue );
-            }
-            catch (GenICam::GenericException &e)
-            {
-                UNUSED( e );
-                TRACE( "Failed to set '%s':%s", pInteger->GetNode()->GetDisplayName().c_str(), e.GetDescription() );
-            }
-            catch (...)
-            {
-                TRACE( "Failed to set '%s'", pInteger->GetNode()->GetDisplayName().c_str() );
-            }
-
-            return static_cast<UINT>(value);
+			pSlider->SetPos((int)roundvalue);
+            return static_cast<UINT>(roundvalue);
         }
     }
-
+	if (pCtrl == &m_ctrlDurationSlider)
+		return 1;
     return 0;
+}
+
+void CConfigView::setPartnerView(CConfigView * partnerView)
+{
+	m_ptrPartnerView = partnerView;
+	if (NULL != partnerView)
+		partnerView->setPartnerView(this);
 }
 
 // Called when a test image is selected. Sets the new value.

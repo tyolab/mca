@@ -690,11 +690,29 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 			m_hHeight = GenApi::Register(m_ptrHeight->GetNode(), *this, &CMCADoc::OnNodeChanged);
 		}
 
+
+		//if (GenApi::IsWritable(m_camera.AcquisitionFrameRateEnable))
+		//{
+		//	m_camera.AcquisitionFrameRateEnable = true;
+		//	//cout << "set GrabLoopThreadPriorityOverwrite" << endl;
+		//		//cout << "set GrabLoopThreadPriority" << endl;
+		//// camera.GrabLoopThreadPriority.SetValue(34);
+		//}
+		//else { TRACE(CUtf82W("NOTE: cannot set GrabLoopThreadPriority")); }
 		//
 		m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRate"));
 		if (!m_ptrFrameRate.IsValid())
 		{
-			m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRateRaw"));
+			m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRateAbs"));
+		}
+		if (!m_ptrFrameRate.IsValid())
+		{
+			try {
+
+			}
+			catch (...) {
+
+			}
 		}
 		if (m_ptrFrameRate.IsValid())
 		{
