@@ -37,6 +37,8 @@ BEGIN_MESSAGE_MAP(CMCADoc, CDocument)
     ON_COMMAND( ID_UPDATE_NODES, &CMCADoc::OnUpdateNodes )
 END_MESSAGE_MAP()
 
+int CMCADoc::m_duration = 2;
+
 // CMCADoc construction/destruction
 CMCADoc::CMCADoc()
     : m_cntGrabbedImages(0)
@@ -45,6 +47,9 @@ CMCADoc::CMCADoc()
     , m_hTestImage(NULL)
     , m_hGain(NULL)
     , m_hExposureTime(NULL)
+	, m_hWidth(NULL)
+	, m_hHeight(NULL)
+	, m_hFrameRate(NULL)
 {
     // TODO: add one-time construction code here
 	m_id = -1;
@@ -167,6 +172,21 @@ void CMCADoc::DeleteContents()
                 GenApi::Deregister( m_hExposureTime );
                 m_hExposureTime = NULL;
             }
+			if (m_hFrameRate)
+			{
+				GenApi::Deregister(m_hFrameRate);
+				m_hFrameRate = NULL;
+			}
+			if (m_hHeight)
+			{
+				GenApi::Deregister(m_hHeight);
+				m_hHeight = NULL;
+			}
+			if (m_hWidth)
+			{
+				GenApi::Deregister(m_hWidth);
+				m_hWidth = NULL;
+			}
             if (m_hGain)
             {
                 GenApi::Deregister( m_hGain );
@@ -185,6 +205,9 @@ void CMCADoc::DeleteContents()
 
             // Clear the pointer to the features.
             m_ptrExposureTime = NULL;
+			m_ptrHeight = NULL;
+			m_ptrWidth = NULL;
+			m_ptrFrameRate = NULL;
             m_ptrGain = NULL;
             m_ptrTestImage = NULL;
             m_ptrPixelFormat = NULL;
@@ -497,6 +520,24 @@ GenApi::IInteger* CMCADoc::GetExposureTime()
     return (m_ptrExposureTime.IsValid()) ? (GenApi::IInteger*)m_ptrExposureTime : NULL;
 }
 
+GenApi::IInteger* CMCADoc::GetFrameRate()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	return (m_ptrFrameRate.IsValid()) ? (GenApi::IInteger*)m_ptrFrameRate : NULL;
+}
+
+GenApi::IInteger* CMCADoc::GetHeight()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	return (m_ptrHeight.IsValid()) ? (GenApi::IInteger*)m_ptrHeight : NULL;
+}
+
+GenApi::IInteger* CMCADoc::GetWidth()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	return (m_ptrWidth.IsValid()) ? (GenApi::IInteger*)m_ptrWidth : NULL;
+}
+
 
 GenApi::IInteger* CMCADoc::GetGain()
 {
@@ -624,6 +665,42 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
             // Add a callback that triggers the update.
             m_hExposureTime = GenApi::Register( m_ptrExposureTime->GetNode(), *this, &CMCADoc::OnNodeChanged );
         }
+
+		//
+		m_ptrWidth = GetIntegerFeature(m_camera.GetNodeMap().GetNode("Width"));
+		if (!m_ptrWidth.IsValid())
+		{
+			m_ptrWidth = GetIntegerFeature(m_camera.GetNodeMap().GetNode("WidthRaw"));
+		}
+		if (m_ptrWidth.IsValid())
+		{
+			// Add a callback that triggers the update.
+			m_hWidth = GenApi::Register(m_ptrWidth->GetNode(), *this, &CMCADoc::OnNodeChanged);
+		}
+
+		//
+		m_ptrHeight = GetIntegerFeature(m_camera.GetNodeMap().GetNode("Height"));
+		if (!m_ptrHeight.IsValid())
+		{
+			m_ptrHeight = GetIntegerFeature(m_camera.GetNodeMap().GetNode("HeightRaw"));
+		}
+		if (m_ptrHeight.IsValid())
+		{
+			// Add a callback that triggers the update.
+			m_hHeight = GenApi::Register(m_ptrHeight->GetNode(), *this, &CMCADoc::OnNodeChanged);
+		}
+
+		//
+		m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRate"));
+		if (!m_ptrFrameRate.IsValid())
+		{
+			m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRateRaw"));
+		}
+		if (m_ptrFrameRate.IsValid())
+		{
+			// Add a callback that triggers the update.
+			m_hFrameRate = GenApi::Register(m_ptrFrameRate->GetNode(), *this, &CMCADoc::OnNodeChanged);
+		}
 
         // Get the Gain feature.
         // On GigE cameras, the feature is named 'GainRaw'.

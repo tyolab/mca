@@ -14,6 +14,21 @@
 #include "MCADoc.h"
 #include "ConfigView.h"
 
+static const int RESOLUTION_MIN = 100;
+static const int RESOLUTION_MAX = 3000;
+
+static const int FRAME_RATE_MIN = 25;
+static const int FRAME_RATE_MAX = 600;
+
+static const int EXPOSURE_TIME_MIN = 1;
+static const int EXPOSURE_TIME_MAX = 3000;
+
+static const int GAIN_MIN = 0;
+static const int GAIN_MAX = 1000;
+
+static const int DURATION_MIN = 1;
+static const int DURATION_MAX = 100;
+
 // Stores GenApi enumeration items into MFC ComboBox
 void FillEnumerationListCtrl( GenApi::IEnumeration* pEnum, CComboBox* pCtrl )
 {
@@ -161,24 +176,24 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
     if (eHint == UpdateHint_All || (eHint & UpdateHint_Feature))
     {
-		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
-		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+		UpdateSlider(&m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
+		UpdateSliderText(&m_ctrlWidthText, GetDocument()->GetWidth());
 
-		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
-		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+		UpdateSlider(&m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
+		UpdateSliderText(&m_ctrlHeightText, GetDocument()->GetHeight());
 
         // Display the current values.
-        UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
+        UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime(), EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
         UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
 
-        UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain());
+        UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain(), GAIN_MIN, GAIN_MAX);
         UpdateSliderText(&m_ctrlGainText, GetDocument()->GetGain());
 
-		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
-		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+		UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+		UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate());
 
-		UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
-		UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+		UpdateSlider(&m_ctrlDurationSlider, GetDocument()->GetDuration(), TRUE, TRUE, DURATION_MIN, DURATION_MAX);
+		UpdateSliderText(&m_ctrlDurationText, GetDocument()->GetDuration());
 
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
         UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
@@ -188,12 +203,12 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 }
 
 // Called to update value of slider.
-void CConfigView::UpdateSlider( CSliderCtrl *pCtrl, GenApi::IInteger* pInteger )
+void CConfigView::UpdateSlider( CSliderCtrl *pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max)
 {
     if (GenApi::IsReadable( pInteger ))
     {
-        int64_t minimum = pInteger->GetMin();
-        int64_t maximum = pInteger->GetMax();
+        int64_t minimum = min != -1 ? min: pInteger->GetMin();
+        int64_t maximum = max != -1 ? max : pInteger->GetMax();
         int64_t value = pInteger->GetValue();
 
         // Possible loss of data because Windows controls only supports 
@@ -202,6 +217,20 @@ void CConfigView::UpdateSlider( CSliderCtrl *pCtrl, GenApi::IInteger* pInteger )
         pCtrl->SetPos( static_cast<int>(value) );
     }
     pCtrl->EnableWindow( GenApi::IsWritable( pInteger ) );
+}
+
+
+// Called to update value of slider.
+void CConfigView::UpdateSlider(CSliderCtrl *pCtrl, int64_t number, BOOL readable, BOOL writable, int64_t minimum, int64_t maximum)
+{
+	if (readable)
+	{
+		// Possible loss of data because Windows controls only supports 
+		// 32-bitness while GenApi supports 64-bitness.
+		pCtrl->SetRange(static_cast<int>(minimum), static_cast<int>(maximum));
+		pCtrl->SetPos(static_cast<int>(number));
+	}
+	pCtrl->EnableWindow(writable);
 }
 
 // Called to update the value of a label.
@@ -218,6 +247,17 @@ void CConfigView::UpdateSliderText( CStatic *pString, GenApi::IInteger* pInteger
     }
     pString->EnableWindow( GenApi::IsWritable( pInteger ) );
 }
+
+// Called to update the value of a label.
+void CConfigView::UpdateSliderText(CStatic *pString, uint64_t value)
+{
+	CString strValue;
+	strValue.Format(_T("%d"), value);
+	pString->SetWindowText(strValue);
+
+	pString->EnableWindow(TRUE);
+}
+
 
 // Called to update the enumeration in a combo box.
 void CConfigView::UpdateEnumeration( CComboBox *pCtrl, GenApi::IEnumeration* pEnum )
@@ -345,8 +385,11 @@ void CConfigView::OnItemchangedDevicelist( NMHDR *pNMHDR, LRESULT *pResult )
 void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 {
     // Forward the scroll message to the slider controls.
-    nPos = OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() );
-    nPos = OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() );
+    nPos = OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() , EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
+    nPos = OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() , GAIN_MIN, GAIN_MAX);
+	nPos = OnScroll(pScrollBar, &m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	nPos = OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
+	nPos = OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
 
     CFormView::OnHScroll( nSBCode, nPos, pScrollBar );
 }
@@ -368,7 +411,7 @@ int64_t RoundTo( int64_t newValue, int64_t oldValue, int64_t minimum, int64_t ma
 }
 
 // Update a slider and set a valid value.
-UINT CConfigView::OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger )
+UINT CConfigView::OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max)
 {
     if (pScrollBar->GetSafeHwnd() == pCtrl->GetSafeHwnd())
     {
@@ -376,8 +419,8 @@ UINT CConfigView::OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::
         {   
             // Fetch current value, range, and increment of the camera feature.
             int64_t value = pInteger->GetValue();
-            const int64_t minimum = pInteger->GetMin();
-            const int64_t maximum = pInteger->GetMax();
+            const int64_t minimum = min != -1 ? min : pInteger->GetMin();
+            const int64_t maximum = max != -1 ? max : pInteger->GetMax();
             const int64_t increment = pInteger->GetInc();
 
             // Adjust the pointer to the slider to get the correct position.

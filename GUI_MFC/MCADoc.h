@@ -36,9 +36,18 @@ public:
     const Pylon::CGrabResultPtr GetGrabResultPtr() const;
     const Pylon::CPylonBitmapImage& GetBitmapImage() const;
     GenApi::IInteger* GetExposureTime();
+	GenApi::IInteger* GetFrameRate();
+	GenApi::IInteger* GetWidth();
+	GenApi::IInteger* GetHeight();
     GenApi::IInteger* GetGain();
     GenApi::IEnumeration* GetTestImage();
     GenApi::IEnumeration* GetPixelFormat();
+	const int GetDuration() const {
+		return m_duration;
+	}
+	void SetDuration(int duration) {
+		m_duration = duration;
+	}
 
 // Operations
 public:
@@ -100,6 +109,7 @@ protected:
     uint64_t m_cntGrabbedImages;
     uint64_t m_cntSkippedImages;
     uint64_t m_cntGrabErrors;
+	static int m_duration;
 
 private:
 	int			 m_id;
@@ -117,12 +127,18 @@ private:
 
     // Smart pointer to camera features
     GenApi::CIntegerPtr m_ptrExposureTime;
+	GenApi::CIntegerPtr m_ptrHeight;
+	GenApi::CIntegerPtr m_ptrWidth;
+	GenApi::CIntegerPtr m_ptrFrameRate;
     GenApi::CIntegerPtr m_ptrGain;
     GenApi::CEnumerationPtr m_ptrTestImage;
     GenApi::CEnumerationPtr m_ptrPixelFormat;
     // Callback handles
+	GenApi::CallbackHandleType m_hWidth;
+	GenApi::CallbackHandleType m_hHeight;
     GenApi::CallbackHandleType m_hExposureTime;
     GenApi::CallbackHandleType m_hGain;
+	GenApi::CallbackHandleType m_hFrameRate;
     GenApi::CallbackHandleType m_hPixelFormat;
     GenApi::CallbackHandleType m_hTestImage;
 

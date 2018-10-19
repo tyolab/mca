@@ -63,8 +63,10 @@ protected:
     virtual void OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint);
 
     void ComboClearItems(CComboBox*ctrl);
-    void UpdateSlider(CSliderCtrl *ctrl, GenApi::IInteger* pInteger);
+    void UpdateSlider(CSliderCtrl *ctrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1);
+	void UpdateSlider(CSliderCtrl *ctrl, int64_t number, BOOL readable, BOOL writable, int64_t min = -1, int64_t max = -1);
     void UpdateSliderText( CStatic *ctrl, GenApi::IInteger* pInteger );
+	void UpdateSliderText(CStatic *ctrl, uint64_t value);
     void UpdateEnumeration( CComboBox *ctrl, GenApi::IEnumeration* pEnum );
     
     DECLARE_MESSAGE_MAP()
@@ -105,7 +107,7 @@ private:
     Pylon::String_t m_fullNameSelected;
     BOOL m_updatingList;
 public:
-    UINT OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger);
+    UINT OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1);
     afx_msg void OnItemchangedDevicelist(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg void OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar );
     afx_msg void OnCbnSelendokTestimageCombo();
