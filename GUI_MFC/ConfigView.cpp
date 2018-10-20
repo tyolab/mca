@@ -190,7 +190,7 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
         UpdateSliderText(&m_ctrlGainText, GetDocument()->GetGain());
 
 		UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
-		UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate());
+		UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate(), GetDocument()->GetFrameRateValue());
 
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
         UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
@@ -207,6 +207,14 @@ void CConfigView::UpdateDurationCtrls()
 	readable = writable = GetDocument() != m_dummyDoc;
 	UpdateSlider(&m_ctrlDurationSlider, CMCADoc::GetDuration(), readable, writable, DURATION_MIN, DURATION_MAX);
 	UpdateSliderText(&m_ctrlDurationText, CMCADoc::GetDuration(), writable);
+}
+
+void CConfigView::UpdatePartnerViewCtrls()
+{
+	if (NULL != m_ptrPartnerView) {
+		m_ptrPartnerView->UpdateDurationCtrls();
+		m_ptrPartnerView->Invalidate();
+	}
 }
 
 // Called to update value of slider.
@@ -241,12 +249,16 @@ void CConfigView::UpdateSlider(CSliderCtrl *pCtrl, int64_t number, BOOL readable
 }
 
 // Called to update the value of a label.
-void CConfigView::UpdateSliderText( CStatic *pString, GenApi::IInteger* pInteger )
+void CConfigView::UpdateSliderText( CStatic *pString, GenApi::IInteger* pInteger, int64_t defaultValue)
 {
 	CString text;
 	BOOL readable = GenApi::IsReadable(pInteger);
 	if (readable)
 		text = CUtf82W(pInteger->ToString().c_str());
+	else if (defaultValue != -1) {
+		text.Format(_T("%I64d"), defaultValue);
+		readable = TRUE;
+	}
 	else
 		text = "n/a";
     pString->EnableWindow( GenApi::IsWritable( pInteger ) );
@@ -402,15 +414,22 @@ void CConfigView::OnItemchangedDevicelist( NMHDR *pNMHDR, LRESULT *pResult )
 void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 {
     // Forward the scroll message to the slider controls.
+	UINT oldValue = 0;
+
     nPos = OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() , EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
     nPos = OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() , GAIN_MIN, GAIN_MAX);
 	nPos = OnScroll(pScrollBar, &m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
 	nPos = OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
 	nPos = OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
 
-	nPos = OnScroll(pScrollBar, &m_ctrlDurationSlider, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX);
-	CMCADoc::SetDuration(nPos);
-	UpdateDurationCtrls();
+	oldValue = GetDocument()->GetDuration();
+	nPos = OnScrollTo(pScrollBar, &m_ctrlDurationSlider, TRUE, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX);
+
+	if (oldValue != nPos) {
+		CMCADoc::SetDuration(nPos);
+		UpdateDurationCtrls();
+		
+	}
 
     CFormView::OnHScroll( nSBCode, nPos, pScrollBar );
 }
@@ -446,7 +465,9 @@ UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::I
 		// Try to set the value. If successful, update the scroll position.
 		try
 		{
-			value = OnScroll(pScrollBar, pCtrl, writable, value, minimum, maximum, increment);
+			int64_t newValue = OnScrollTo(pScrollBar, pCtrl, writable, value, minimum, maximum, increment);
+			if (newValue != value)
+				pInteger->SetValue(newValue);
 		}
 		catch (GenICam::GenericException &e)
 		{
@@ -460,7 +481,7 @@ UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::I
 	}
 	return value;
 }
-UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment)
+UINT CConfigView::OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment)
 {
     if (pScrollBar->GetSafeHwnd() == pCtrl->GetSafeHwnd())
     {
@@ -478,7 +499,7 @@ UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writ
             int64_t roundvalue = RoundTo( newvalue, value, minimum, maximum, increment );
             if (roundvalue == value)
             {
-                return 0;
+                return roundvalue;
             }
 
 			pSlider->SetPos((int)roundvalue);

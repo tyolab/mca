@@ -50,6 +50,7 @@ CMCADoc::CMCADoc()
 	, m_hWidth(NULL)
 	, m_hHeight(NULL)
 	, m_hFrameRate(NULL)
+	, m_cameraReady(FALSE)
 {
     // TODO: add one-time construction code here
 	m_id = -1;
@@ -545,6 +546,42 @@ GenApi::IInteger* CMCADoc::GetGain()
     return (m_ptrGain.IsValid()) ? (GenApi::IInteger*)m_ptrGain : NULL;
 }
 
+UINT CMCADoc::GetExposureTimeValue()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	return (m_ptrExposureTime.IsValid()) ? m_ptrExposureTime->GetValue() : 0;
+}
+
+int CMCADoc::GetFrameRateValue()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	if (!m_cameraReady)
+		return -1;
+	else if (m_ptrFrameRate.IsValid())
+		return m_ptrFrameRate->GetValue();
+	return m_camera.ResultingFrameRate.GetValue();
+	//return m_camera.AcquisitionFrameRate.GetValue();
+}
+
+UINT CMCADoc::GetHeightValue()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	return (m_ptrHeight.IsValid()) ? m_ptrHeight->GetValue() : 0;
+}
+
+UINT CMCADoc::GetWidthValue()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	return (m_ptrWidth.IsValid()) ? m_ptrWidth->GetValue() : 0;
+}
+
+
+UINT CMCADoc::GetGainValue()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	return (m_ptrGain.IsValid()) ? m_ptrGain->GetValue() : 0;
+}
+
 
 GenApi::IEnumeration* CMCADoc::GetTestImage()
 {
@@ -691,15 +728,15 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 		}
 
 
-		//if (GenApi::IsWritable(m_camera.AcquisitionFrameRateEnable))
-		//{
-		//	m_camera.AcquisitionFrameRateEnable = true;
-		//	//cout << "set GrabLoopThreadPriorityOverwrite" << endl;
-		//		//cout << "set GrabLoopThreadPriority" << endl;
-		//// camera.GrabLoopThreadPriority.SetValue(34);
-		//}
-		//else { TRACE(CUtf82W("NOTE: cannot set GrabLoopThreadPriority")); }
-		//
+		if (GenApi::IsWritable(m_camera.AcquisitionFrameRateEnable))
+		{
+			m_camera.AcquisitionFrameRateEnable = true;
+			//cout << "set GrabLoopThreadPriorityOverwrite" << endl;
+				//cout << "set GrabLoopThreadPriority" << endl;
+		// camera.GrabLoopThreadPriority.SetValue(34);
+		}
+		else { TRACE(CUtf82W("NOTE: cannot set Acquisition Frame Rate")); }
+		
 		m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRate"));
 		if (!m_ptrFrameRate.IsValid())
 		{
@@ -708,7 +745,7 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 		if (!m_ptrFrameRate.IsValid())
 		{
 			try {
-
+				m_ptrFrameRate = (GenApi::IInteger*)&m_camera.AcquisitionFrameRate;
 			}
 			catch (...) {
 
@@ -757,6 +794,7 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
         // Mark the document as "not modified".
         SetModifiedFlag(FALSE);
 
+		m_cameraReady = TRUE;
         return TRUE;
     }
     catch (const Pylon::GenericException& e)

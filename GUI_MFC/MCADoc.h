@@ -44,6 +44,13 @@ public:
     GenApi::IInteger* GetGain();
     GenApi::IEnumeration* GetTestImage();
     GenApi::IEnumeration* GetPixelFormat();
+
+	UINT GetExposureTimeValue();
+	int GetFrameRateValue();
+	UINT GetWidthValue();
+	UINT GetHeightValue();
+	UINT GetGainValue();
+
 	static const int GetDuration() {
 		return m_duration;
 	}
@@ -116,6 +123,7 @@ protected:
 private:
 	int			 m_id;
 	CString		 m_title;
+	BOOL		 m_cameraReady;
 
     // The camera
     Pylon::CBaslerUsbInstantCamera m_camera;

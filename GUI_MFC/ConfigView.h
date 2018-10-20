@@ -65,11 +65,14 @@ protected:
     void ComboClearItems(CComboBox*ctrl);
     void UpdateSlider(CSliderCtrl *ctrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1);
 	void UpdateSlider(CSliderCtrl *ctrl, int64_t number, BOOL readable, BOOL writable, int64_t min = -1, int64_t max = -1);
-    void UpdateSliderText( CStatic *ctrl, GenApi::IInteger* pInteger );
+    void UpdateSliderText( CStatic *ctrl, GenApi::IInteger* pInteger, int64_t defaultValue = -1 );
 	void UpdateSliderText(CStatic *ctrl, uint64_t value, BOOL writable);
 	void UpdateSliderText(CStatic *ctrl, BOOL writable, CString text);
     void UpdateEnumeration( CComboBox *ctrl, GenApi::IEnumeration* pEnum );
+
+public:
 	void UpdateDurationCtrls();
+	void UpdatePartnerViewCtrls();
     
     DECLARE_MESSAGE_MAP()
 private:
@@ -113,7 +116,7 @@ private:
 
 public:
     UINT OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1);
-	UINT OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum = -1, int64_t maximum = -1, int64_t increment = 1);
+	UINT OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum = -1, int64_t maximum = -1, int64_t increment = 1);
 	void setPartnerView(CConfigView *partnerView);
 
     afx_msg void OnItemchangedDevicelist(NMHDR *pNMHDR, LRESULT *pResult);
