@@ -42,6 +42,7 @@ public:
     afx_msg void OnAppAbout();
 	afx_msg void OnGrabOne();
 	afx_msg void OnStartGrabbing();
+	afx_msg void OnStopGrab();
 	afx_msg void OnNewGrabresultCamera1();
 	afx_msg void OnNewGrabresultCamera2();
 

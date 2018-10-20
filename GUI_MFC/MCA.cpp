@@ -32,6 +32,7 @@ BEGIN_MESSAGE_MAP(CMCAApp, CWinApp)
 	//
 	ON_COMMAND(ID_CAMERA_GRABONE, &CMCAApp::OnGrabOne)
 	ON_COMMAND(ID_CAMERA_STARTGRABBING, &CMCAApp::OnStartGrabbing)
+	ON_COMMAND(ID_CAMERA_STOPGRAB, &CMCAApp::OnStopGrab)
 
 	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA1, &CMCAApp::OnNewGrabresultCamera1)
 	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA2, &CMCAApp::OnNewGrabresultCamera2)
@@ -210,6 +211,12 @@ void CMCAApp::OnStartGrabbing()
 {
 	m_cameraInfo1.GrabMore();
 	m_cameraInfo2.GrabMore();
+}
+
+void CMCAApp::OnStopGrab()
+{
+	m_cameraInfo1.StopGrab();
+	m_cameraInfo2.StopGrab();
 }
 
 void CMCAApp::OnNewGrabresultCamera1()

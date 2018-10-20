@@ -27,6 +27,12 @@ void CCameraInfo::GrabMore()
 		m_pCameraDoc->OnStartGrabbing();
 }
 
+void CCameraInfo::StopGrap()
+{
+	if (NULL != m_pCameraDoc)
+		m_pCameraDoc->OnStopGrab();
+}
+
 void CCameraInfo::setMCADoc(CMCADoc* cameraDoc)
 {
 	m_pCameraDoc = cameraDoc;

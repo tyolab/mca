@@ -19,6 +19,7 @@ public:
 
 	void GrabOne();
 	void GrabMore();
+	void StopGrap();
 
 	void SetID(int id) {
 		m_id = id;
