@@ -200,8 +200,6 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
 		UpdateFrameRateCtrls();
 		UpdateDurationCtrls();
-
-		Invalidate();
     }
 }
 
@@ -447,6 +445,9 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 	UpdateFrameRateCtrls();
 
     CFormView::OnHScroll( nSBCode, newValue, pScrollBar );
+
+	// refresh even the window is not focused
+	GetDocument()->UpdateAllViews(NULL, UpdateHint_Feature);
 }
 
 // Round a value to a valid value

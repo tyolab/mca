@@ -301,6 +301,8 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     // filling up the debug output.
     //TRACE(_T("%s\n"), __FUNCTIONW__);
 
+	TRACE(_T("%s: %d image(s) grabbed\n"), __FUNCTIONW__, m_buffer.size());
+
     // The m_ptrGrabResult will be accessed from different threads,
     // so we need to protect it with the m_MemberLock.
     CSingleLock lock(&m_MemberLock, TRUE);
@@ -308,6 +310,15 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     // When overwriting the current CGrabResultPtr, the old result will automatically be
     // released and reused by CInstantCamera.
     m_ptrGrabResult = grabResult;
+
+
+	//if (m_ptrGrabResult.IsValid() && m_ptrGrabResult->GrabSucceeded())
+	//{
+	//	m_buffer.push_back(m_ptrGrabResult);
+	//}
+
+	//while (m_buffer.size() > m_bufferSize)
+	//	m_buffer.pop_front();
 
     lock.Unlock();
 
@@ -481,16 +492,15 @@ void CMCADoc::OnNewGrabresult()
 {
     // Hold a reference to the result to make sure the grab result
     // won't be deleted while we're in this function.
-    Pylon::CGrabResultPtr ptr = GetGrabResultPtr();
-	m_buffer.push_back(ptr);
-
-	while (m_buffer.size() > m_bufferSize)
-		m_buffer.pop_front();
+	//Pylon::CGrabResultPtr ptr = m_buffer.back(); // GetGrabResultPtr();
+	Pylon::CGrabResultPtr ptr = GetGrabResultPtr();
 
     // First check whether the smart pointer is valid.
     // Then call GrabSucceeded on the CGrabResultData which the smart pointer references.
     if (ptr.IsValid() && ptr->GrabSucceeded())
     {
+		// m_buffer.push_back(ptr);
+
         // This is where you would do image processing
         // and other tasks.
         // Attention: If you perform lengthy operations, the GUI may become
@@ -500,6 +510,8 @@ void CMCADoc::OnNewGrabresult()
 
         // Convert the grab result to a dib so we can display it on the screen.
         m_bitmapImage.CopyImage(ptr);
+
+		TRACE(_T("%s: %d image(s) received\n"), __FUNCTIONW__, m_cntGrabbedImages);
     }
     else
     {
@@ -731,6 +743,8 @@ void CMCADoc::OnStartGrabbing()
 
     // Start grabbing until StopGrabbing() is called.
     m_camera.StartGrabbing(Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
+	// m_camera.StartGrabbing(m_bufferSize);
+	// retrieve the result in main thread
 }
 
 
