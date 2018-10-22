@@ -65,6 +65,8 @@ public:
 		return m_duration;
 	}
 	static void SetDuration(UINT duration) {
+		if (duration < 1)
+			return;
 		m_duration = duration;
 	}
 

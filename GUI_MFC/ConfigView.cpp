@@ -428,24 +428,25 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 {
     // Forward the scroll message to the slider controls.
 	UINT oldValue = 0;
+	int newValue = nPos;
 
-    nPos = OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() , EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
-    nPos = OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() , GAIN_MIN, GAIN_MAX);
-	nPos = OnScroll(pScrollBar, &m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
-	nPos = OnScroll(pScrollBar, &m_ctrlResultingFrSlider, GetDocument()->GetResultingFr(), FRAME_RATE_MIN, FRAME_RATE_MAX);
-	nPos = OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
-	nPos = OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
+    newValue =  OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() , EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
+    newValue =  OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() , GAIN_MIN, GAIN_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlResultingFrSlider, GetDocument()->GetResultingFr(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
 
 	oldValue = GetDocument()->GetDuration();
-	nPos = OnScrollTo(pScrollBar, &m_ctrlDurationSlider, TRUE, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX, 1);
+	newValue =  OnScrollTo(pScrollBar, &m_ctrlDurationSlider, TRUE, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX, 1);
 
-	if (nPos > 0 && oldValue != nPos) {
-		CMCADoc::SetDuration(nPos);
+	if (newValue > 0 && oldValue != newValue) {
+		CMCADoc::SetDuration(newValue);
 		UpdateDurationCtrls();
 	}
 	UpdateFrameRateCtrls();
 
-    CFormView::OnHScroll( nSBCode, nPos, pScrollBar );
+    CFormView::OnHScroll( nSBCode, newValue, pScrollBar );
 }
 
 // Round a value to a valid value
@@ -524,7 +525,7 @@ int CConfigView::OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL wri
     }
 	//if (pCtrl == &m_ctrlDurationSlider)
 	//	return 1;
-    return -1;
+    return value;
 }
 
 void CConfigView::setPartnerView(CConfigView * partnerView)
