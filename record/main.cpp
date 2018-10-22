@@ -109,7 +109,8 @@ int main(int argc, char* argv[])
 	cout << "================" << endl;
 	cout << "Gain          : " << camera.Gain.GetValue() << endl;
 	cout << "Exposure time : " << camera.ExposureTime.GetValue() << endl;
-	cout << "FPS           : " << camera.AcquisitionFrameRate.GetValue() << endl;
+	cout << "Expected FPS  : " << camera.AcquisitionFrameRate.GetValue() << endl;
+	cout << "Resulting FPS : " << camera.ResultingFrameRate.GetValue() << endl;
 	cout << "MaxNumBuffer  : " << camera.MaxNumBuffer.GetValue() << endl;
 	cout << "Width         : " << width->GetValue() << endl;
 	cout << "Height        : " << height->GetValue() << endl;
@@ -164,7 +165,8 @@ int main(int argc, char* argv[])
 	cout << "=================" << endl;
 	cout << "Gain          :  " << camera.Gain.GetValue() << endl;
 	cout << "Exposure time :  " << camera.ExposureTime.GetValue() << endl;
-	cout << "FPS           :  " << camera.AcquisitionFrameRate.GetValue() << endl;
+	cout << "Expected FPS  : " << camera.AcquisitionFrameRate.GetValue() << endl;
+	cout << "Resulting FPS : " << camera.ResultingFrameRate.GetValue() << endl;
 	cout << "MaxNumBuffer  :  " << camera.MaxNumBuffer.GetValue() << endl;
 	cout << "NumEmptyBuffers: " << camera.NumEmptyBuffers.GetValue() << endl;
 	cout << "GrabLoopPriority:" << camera.GrabLoopThreadPriority.GetValue() << endl;

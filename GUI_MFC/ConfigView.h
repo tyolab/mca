@@ -72,6 +72,7 @@ protected:
 
 public:
 	void UpdateDurationCtrls();
+	void UpdateFrameRateCtrls();
 	void UpdatePartnerViewCtrls();
     
     DECLARE_MESSAGE_MAP()
@@ -100,6 +101,10 @@ private:
 	// FrameRate time text control
 	CStatic m_ctrlFrameRateText;
 
+	CSliderCtrl m_ctrlResultingFrSlider;
+	// ResultingFr time text control
+	CStatic m_ctrlResultingFrText;
+
 	CSliderCtrl m_ctrlDurationSlider;
 	// Duration time text control
 	CStatic m_ctrlDurationText;
@@ -115,8 +120,8 @@ private:
 	CConfigView *m_ptrPartnerView;
 
 public:
-    UINT OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1);
-	UINT OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum = -1, int64_t maximum = -1, int64_t increment = 1);
+    int OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1, int64_t increment = -1);
+	int OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment);
 	void setPartnerView(CConfigView *partnerView);
 
     afx_msg void OnItemchangedDevicelist(NMHDR *pNMHDR, LRESULT *pResult);

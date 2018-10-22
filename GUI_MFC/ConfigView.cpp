@@ -14,11 +14,15 @@
 #include "MCADoc.h"
 #include "ConfigView.h"
 
-static const int RESOLUTION_MIN = 100;
-static const int RESOLUTION_MAX = 3000;
+static const int RESOLUTION_MIN = 320;
+static const int RESOLUTION_MAX = 3200;
+static const int RESOLUTION_INC = 32;
 
 static const int FRAME_RATE_MIN = 25;
 static const int FRAME_RATE_MAX = 600;
+
+static const int RESULTING_FR_MIN = 25;
+static const int RESULTING_FR_MAX = 600;
 
 static const int EXPOSURE_TIME_MIN = 1;
 static const int EXPOSURE_TIME_MAX = 3000;
@@ -27,7 +31,7 @@ static const int GAIN_MIN = 0;
 static const int GAIN_MAX = 1000;
 
 static const int DURATION_MIN = 1;
-static const int DURATION_MAX = 100;
+static const int DURATION_MAX = 400;
 
 // Stores GenApi enumeration items into MFC ComboBox
 void FillEnumerationListCtrl( GenApi::IEnumeration* pEnum, CComboBox* pCtrl )
@@ -120,6 +124,8 @@ void CConfigView::DoDataExchange( CDataExchange* pDX )
     DDX_Control( pDX, IDC_HEIGHT_STATIC, m_ctrlHeightText );
 	DDX_Control(pDX, IDC_FRAME_RATE_SLIDER, m_ctrlFrameRateSlider);
 	DDX_Control(pDX, IDC_FRAME_RATE_STATIC, m_ctrlFrameRateText);
+	DDX_Control(pDX, IDC_RESULTING_FR_SLIDER, m_ctrlResultingFrSlider);
+	DDX_Control(pDX, IDC_RESULTING_FR_STATIC, m_ctrlResultingFrText);
 	DDX_Control(pDX, IDC_EXPOSURE_SLIDER, m_ctrlExposureSlider);
 	DDX_Control(pDX, IDC_EXPOSURE_STATIC, m_ctrlExposureText);
 	DDX_Control(pDX, IDC_DURATION_SLIDER, m_ctrlDurationSlider);
@@ -189,12 +195,10 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
         UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain(), GAIN_MIN, GAIN_MAX);
         UpdateSliderText(&m_ctrlGainText, GetDocument()->GetGain());
 
-		UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
-		UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate(), GetDocument()->GetFrameRateValue());
-
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
         UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
 
+		UpdateFrameRateCtrls();
 		UpdateDurationCtrls();
 
 		Invalidate();
@@ -207,6 +211,15 @@ void CConfigView::UpdateDurationCtrls()
 	readable = writable = GetDocument() != m_dummyDoc;
 	UpdateSlider(&m_ctrlDurationSlider, CMCADoc::GetDuration(), readable, writable, DURATION_MIN, DURATION_MAX);
 	UpdateSliderText(&m_ctrlDurationText, CMCADoc::GetDuration(), writable);
+}
+
+void CConfigView::UpdateFrameRateCtrls()
+{
+	UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate(), GetDocument()->GetFrameRateValue());
+
+	UpdateSlider(&m_ctrlResultingFrSlider, -1, FALSE, FALSE, RESULTING_FR_MIN, RESULTING_FR_MAX);
+	UpdateSliderText(&m_ctrlResultingFrText, GetDocument()->GetResultingFr(), GetDocument()->GetResultingFrValue());
 }
 
 void CConfigView::UpdatePartnerViewCtrls()
@@ -419,17 +432,18 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
     nPos = OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() , EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
     nPos = OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() , GAIN_MIN, GAIN_MAX);
 	nPos = OnScroll(pScrollBar, &m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	nPos = OnScroll(pScrollBar, &m_ctrlResultingFrSlider, GetDocument()->GetResultingFr(), FRAME_RATE_MIN, FRAME_RATE_MAX);
 	nPos = OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
 	nPos = OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
 
 	oldValue = GetDocument()->GetDuration();
-	nPos = OnScrollTo(pScrollBar, &m_ctrlDurationSlider, TRUE, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX);
+	nPos = OnScrollTo(pScrollBar, &m_ctrlDurationSlider, TRUE, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX, 1);
 
-	if (oldValue != nPos) {
+	if (nPos > 0 && oldValue != nPos) {
 		CMCADoc::SetDuration(nPos);
 		UpdateDurationCtrls();
-		
 	}
+	UpdateFrameRateCtrls();
 
     CFormView::OnHScroll( nSBCode, nPos, pScrollBar );
 }
@@ -451,7 +465,7 @@ int64_t RoundTo( int64_t newValue, int64_t oldValue, int64_t minimum, int64_t ma
 }
 
 // Update a slider and set a valid value.
-UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max)
+int CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max, int64_t inc)
 {
 	BOOL writable = GenApi::IsWritable(pInteger);
 	int64_t value = 0;
@@ -460,14 +474,16 @@ UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::I
 		value = pInteger->GetValue();
 		const int64_t minimum = min != -1 ? min : pInteger->GetMin();
 		const int64_t maximum = max != -1 ? max : pInteger->GetMax();
-		const int64_t increment = pInteger->GetInc();
+		const int64_t increment = inc != -1 ? inc : pInteger->GetInc();
 
 		// Try to set the value. If successful, update the scroll position.
 		try
 		{
 			int64_t newValue = OnScrollTo(pScrollBar, pCtrl, writable, value, minimum, maximum, increment);
-			if (newValue != value)
+			if (newValue != -1 && newValue != value) {
 				pInteger->SetValue(newValue);
+				return newValue;
+			}
 		}
 		catch (GenICam::GenericException &e)
 		{
@@ -481,7 +497,7 @@ UINT CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::I
 	}
 	return value;
 }
-UINT CConfigView::OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment)
+int CConfigView::OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment)
 {
     if (pScrollBar->GetSafeHwnd() == pCtrl->GetSafeHwnd())
     {
@@ -506,9 +522,9 @@ UINT CConfigView::OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL wr
             return static_cast<UINT>(roundvalue);
         }
     }
-	if (pCtrl == &m_ctrlDurationSlider)
-		return 1;
-    return 0;
+	//if (pCtrl == &m_ctrlDurationSlider)
+	//	return 1;
+    return -1;
 }
 
 void CConfigView::setPartnerView(CConfigView * partnerView)

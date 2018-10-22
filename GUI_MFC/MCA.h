@@ -71,6 +71,9 @@ private:
 	// camera info #2
 	CCameraInfo m_cameraInfo2;
 
+	// video output folder
+	CString m_strOutputFolder;
+
 public:
     afx_msg void OnOpenCamera();
 };

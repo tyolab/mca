@@ -18,6 +18,12 @@
 #include <windows.h>
 #include <shlobj.h>
 
+#include <ctime>
+
+#include <pylon/PylonIncludes.h>
+
+#pragma comment(lib, "shell32.lib")
+
 #include <pylon/PylonIncludes.h>
 #ifdef PYLON_WIN_BUILD
 #    include <pylon/PylonGUI.h>
@@ -150,6 +156,26 @@ BOOL CMCAApp::InitInstance()
     m_pMainWnd->UpdateWindow();
     // call DragAcceptFiles only if there's a suffix
     //  In an SDI app, this should occur after ProcessShellCommand
+
+	// Initialize output folder
+	wchar_t videosFolder[MAX_PATH];
+	HRESULT result = SHGetFolderPath(NULL, CSIDL_MYVIDEO, NULL, SHGFP_TYPE_CURRENT, videosFolder);
+
+	if (result != S_OK)
+		TRACE( "Error in getting the videos folder \n");
+
+	m_strOutputFolder = videosFolder + CString("\\MCA");
+	if (CreateDirectory(m_strOutputFolder, NULL) ||
+		ERROR_ALREADY_EXISTS == GetLastError())
+	{
+		//nothing
+	}
+	else
+	{
+		// Failed to create directory.
+		TRACE("Error in creating the videos output folder \n");
+	}
+
     return TRUE;
 }
 
@@ -209,14 +235,37 @@ void CMCAApp::OnGrabOne()
 
 void CMCAApp::OnStartGrabbing()
 {
+	if (!Pylon::CVideoWriter::IsSupported())
+	{
+		CString strErrorMessage;
+		strErrorMessage.Format(_T("Could not open camera \"%s\""), m_strDeviceFullName);
+		AfxMessageBox(strErrorMessage);
+		return;
+	}
+
 	m_cameraInfo1.GrabMore();
 	m_cameraInfo2.GrabMore();
 }
 
 void CMCAApp::OnStopGrab()
 {
-	m_cameraInfo1.StopGrab();
-	m_cameraInfo2.StopGrab();
+	m_cameraInfo1.StopGrabbing();
+	m_cameraInfo2.StopGrabbing();
+
+	CWaitCursor wait;
+	// saving video now
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	strftime(buffer, sizeof(buffer), "%Y%m%d-%H%M%S", timeinfo);
+
+	CString timestamp = CString(buffer);
+	m_cameraInfo1.SaveVideo(m_strOutputFolder, timestamp);
+	m_cameraInfo2.SaveVideo(m_strOutputFolder, timestamp);
 }
 
 void CMCAApp::OnNewGrabresultCamera1()

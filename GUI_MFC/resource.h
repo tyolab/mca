@@ -115,9 +115,7 @@
 #define IDC_TESTIMAGE_COMBO             1005
 #define IDC_PIXELFORMAT_COMBO           1006
 #define IDC_RESOLUTION_X                1007
-#define IDC_GAIN_STATIC2                1007
 #define IDC_RESOLUTION_Y                1008
-#define IDC_GAIN_SLIDER2                1008
 #define IDS_FILTER_IMAGETYPES           1024
 #define IDC_WIDTH_SLIDER                1025
 #define IDC_WIDTH_EDIT                  1026
@@ -126,8 +124,11 @@
 #define IDC_HEIGHT_EDIT                 1029
 #define IDC_HEIGHT_STATIC               1030
 #define IDC_FRAME_RATE_SLIDER           1031
+#define IDC_RESULTING_FR_SLIDER         1037
 #define IDC_FRAME_RATE_EDIT             1032
+#define IDC_RESULTING_FR_EDIT           1038
 #define IDC_FRAME_RATE_STATIC           1033
+#define IDC_RESULTING_FR_STATIC         1039
 #define IDC_DURATION_SLIDER             1034
 #define IDC_DURATION_EDIT               1035
 #define IDC_DURATION_STATIC             1036

@@ -14,6 +14,12 @@
 #include "MCADoc.h"
 #include "AutoPacketSizeConfiguration.h"
 
+#include <ctime>
+
+using namespace Pylon;
+using namespace GenApi;
+
+const UINT DEFAULT_BUFFER_SIZE = 10000; // for example, 200fps, the buffer can hold 50s of recording
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -37,7 +43,9 @@ BEGIN_MESSAGE_MAP(CMCADoc, CDocument)
     ON_COMMAND( ID_UPDATE_NODES, &CMCADoc::OnUpdateNodes )
 END_MESSAGE_MAP()
 
-int CMCADoc::m_duration = 2;
+UINT CMCADoc::m_duration = 2;
+UINT CMCADoc::m_bufferSize = DEFAULT_BUFFER_SIZE;
+UINT CMCADoc::m_fps = 0;
 
 // CMCADoc construction/destruction
 CMCADoc::CMCADoc()
@@ -474,6 +482,10 @@ void CMCADoc::OnNewGrabresult()
     // Hold a reference to the result to make sure the grab result
     // won't be deleted while we're in this function.
     Pylon::CGrabResultPtr ptr = GetGrabResultPtr();
+	m_buffer.push_back(ptr);
+
+	while (m_buffer.size() > m_bufferSize)
+		m_buffer.pop_front();
 
     // First check whether the smart pointer is valid.
     // Then call GrabSucceeded on the CGrabResultData which the smart pointer references.
@@ -559,8 +571,20 @@ int CMCADoc::GetFrameRateValue()
 		return -1;
 	else if (m_ptrFrameRate.IsValid())
 		return m_ptrFrameRate->GetValue();
+	return m_camera.AcquisitionFrameRate.GetValue();
+}
+
+int CMCADoc::GetResultingFrValue()
+{
+	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
+	if (!m_cameraReady)
+		return -1;
+
+	if (0 == m_id) {
+		m_fps = m_camera.ResultingFrameRate.GetValue();
+		return m_fps;
+	}
 	return m_camera.ResultingFrameRate.GetValue();
-	//return m_camera.AcquisitionFrameRate.GetValue();
 }
 
 UINT CMCADoc::GetHeightValue()
@@ -580,6 +604,68 @@ UINT CMCADoc::GetGainValue()
 {
 	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
 	return (m_ptrGain.IsValid()) ? m_ptrGain->GetValue() : 0;
+}
+
+void CMCADoc::SaveVideo(CString path, CString timestamp)
+{
+	UINT duration = CMCADoc::GetDuration();
+	UINT fps = CMCADoc::GetFPS();
+	UINT totalFramesNumber = duration * fps;
+	int size = totalFramesNumber > m_buffer.size() ? m_buffer.size() : totalFramesNumber;
+
+	if (size > 0) {
+		// Create a video writer object.
+		CVideoWriter videoWriter;
+
+		// The frame rate used for playing the video (playback frame rate).
+		const int cFramesPerSecond = 20;
+		// The quality used for compressing the video.
+		const uint32_t cQuality = 90;
+
+		// Map the pixelType
+		CEnumerationPtr pixelFormat = GetPixelFormat();
+		CPixelTypeMapper pixelTypeMapper(pixelFormat);
+		EPixelType pixelType = pixelTypeMapper.GetPylonPixelTypeFromNodeValue(pixelFormat->GetIntValue());
+		// Open the video writer.
+				// Set parameters before opening the video writer.
+		videoWriter.SetParameter(
+			(uint32_t)GetWidth()->GetValue(),
+			(uint32_t)GetHeight()->GetValue(),
+			pixelType,
+			cFramesPerSecond,
+			cQuality);
+
+		CString cameraId;
+		CString csTitle;
+
+		if (m_id > -1)
+			cameraId.Format(_T("Camera%d-"), m_id + 1);
+		else
+			cameraId = CString("Camera-");
+
+		csTitle = path + CString("\\") + cameraId + timestamp + CString(".mp4");
+		//const char* cstr = (LPCTSTR) csTitle;
+		CT2A ascii(csTitle);
+		videoWriter.Open(ascii.m_psz);
+
+		try {
+			std::list<Pylon::CGrabResultPtr>::iterator it = m_buffer.end();
+			while (size-- > 0)
+				--it;
+			while (it != m_buffer.end()) {
+				Pylon::CGrabResultPtr ptrResult = *it;
+				videoWriter.Add(ptrResult);
+				++it;
+			}
+			videoWriter.Close();
+			m_buffer.clear();
+		}
+		catch (const Pylon::GenericException &e)
+		{
+			// Error handling.
+			TRACE("Error in saving video");
+		}
+	}
 }
 
 

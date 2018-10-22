@@ -19,7 +19,9 @@ public:
 
 	void GrabOne();
 	void GrabMore();
-	void StopGrap();
+	void StopGrabbing();
+
+	void SaveVideo(CString paht, CString timestamp);
 
 	void SetID(int id) {
 		m_id = id;

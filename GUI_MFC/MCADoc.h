@@ -10,6 +10,8 @@
 */
 #pragma once
 
+#include <list>
+#include <pylon/PylonIncludes.h>
 #include <pylon/usb/BaslerUsbInstantCamera.h>
 
 // Hints to pass to UpdateAllViews(), so we can update specific parts of the GUI.
@@ -39,23 +41,43 @@ public:
     const Pylon::CPylonBitmapImage& GetBitmapImage() const;
     GenApi::IInteger* GetExposureTime();
 	GenApi::IInteger* GetFrameRate();
+	GenApi::IInteger* GetResultingFr() { return NULL; }
 	GenApi::IInteger* GetWidth();
 	GenApi::IInteger* GetHeight();
     GenApi::IInteger* GetGain();
     GenApi::IEnumeration* GetTestImage();
     GenApi::IEnumeration* GetPixelFormat();
 
+	const std::list<Pylon::CGrabResultPtr>& GetBuffer() {
+		return m_buffer;
+	}
+
 	UINT GetExposureTimeValue();
 	int GetFrameRateValue();
+	int GetResultingFrValue();
 	UINT GetWidthValue();
 	UINT GetHeightValue();
 	UINT GetGainValue();
 
-	static const int GetDuration() {
+	void SaveVideo(CString path, CString timestamp);
+
+	static const UINT GetDuration() {
 		return m_duration;
 	}
-	static void SetDuration(int duration) {
+	static void SetDuration(UINT duration) {
 		m_duration = duration;
+	}
+
+	static const UINT GetBufferSize() {
+		return m_bufferSize;
+	}
+
+	static void SetBufferSize(UINT bufferSize) {
+		m_bufferSize = bufferSize;
+	}
+
+	static const UINT GetFPS() {
+		return m_fps;
 	}
 
 // Operations
@@ -118,12 +140,18 @@ protected:
     uint64_t m_cntGrabbedImages;
     uint64_t m_cntSkippedImages;
     uint64_t m_cntGrabErrors;
-	static int m_duration;
+
+	static UINT m_duration;
+	static UINT m_bufferSize;
+	static UINT m_fps; // the real resulting frame rate 
 
 private:
 	int			 m_id;
 	CString		 m_title;
 	BOOL		 m_cameraReady;
+
+	// frame buffer
+	std::list<Pylon::CGrabResultPtr> m_buffer;
 
     // The camera
     Pylon::CBaslerUsbInstantCamera m_camera;

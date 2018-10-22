@@ -10,7 +10,6 @@ CCameraInfo::CCameraInfo()
 
 }
 
-
 CCameraInfo::~CCameraInfo()
 {
 }
@@ -27,10 +26,18 @@ void CCameraInfo::GrabMore()
 		m_pCameraDoc->OnStartGrabbing();
 }
 
-void CCameraInfo::StopGrap()
+void CCameraInfo::StopGrabbing()
 {
-	if (NULL != m_pCameraDoc)
+	if (NULL != m_pCameraDoc) {
 		m_pCameraDoc->OnStopGrab();
+	}
+}
+
+void CCameraInfo::SaveVideo(CString path, CString timestamp)
+{
+	if (NULL != m_pCameraDoc) {
+		m_pCameraDoc->SaveVideo(path, timestamp);
+	}
 }
 
 void CCameraInfo::setMCADoc(CMCADoc* cameraDoc)
