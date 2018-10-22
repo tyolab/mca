@@ -11,8 +11,12 @@
 #pragma once
 
 #include <list>
+#include <memory>
+
 #include <pylon/PylonIncludes.h>
 #include <pylon/usb/BaslerUsbInstantCamera.h>
+
+#include "ImageResult.h"
 
 // Hints to pass to UpdateAllViews(), so we can update specific parts of the GUI.
 enum EUpdateHint
@@ -48,7 +52,7 @@ public:
     GenApi::IEnumeration* GetTestImage();
     GenApi::IEnumeration* GetPixelFormat();
 
-	const std::list<Pylon::CGrabResultPtr>& GetBuffer() {
+	const std::list<std::unique_ptr<CImageResult> >& GetBuffer() {
 		return m_buffer;
 	}
 
@@ -136,6 +140,10 @@ public:
 	}
 
 	void UpdateTitle();
+	void UpdateSettingsDisplay();
+	BOOL IsCameraIdle();
+	BOOL IsCameraInUse();
+	BOOL HasImage();
 
 protected:
     mutable CCriticalSection m_MemberLock;
@@ -153,7 +161,7 @@ private:
 	BOOL		 m_cameraReady;
 
 	// frame buffer
-	std::list<Pylon::CGrabResultPtr> m_buffer;
+	std::list<std::unique_ptr<CImageResult> > m_buffer;
 
     // The camera
     Pylon::CBaslerUsbInstantCamera m_camera;
@@ -194,7 +202,7 @@ public:
     afx_msg void OnUpdateGrabOne(CCmdUI *pCmdUI);
     afx_msg void OnUpdateStartGrabbing(CCmdUI *pCmdUI);
     afx_msg void OnUpdateStopGrab(CCmdUI *pCmdUI);
-    afx_msg void OnFileImageSaveAs();
     afx_msg void OnUpdateFileImageSaveAs(CCmdUI *pCmdUI);
+	afx_msg void OnFileImageSaveAs();
     afx_msg void OnUpdateNodes();
 };

@@ -4,7 +4,9 @@
 #include "MCADoc.h"
 #include "ConfigView.h"
 
-CCameraInfo::CCameraInfo()
+CCameraInfo::CCameraInfo():
+	m_pConfigView(NULL)
+	, m_pCameraDoc(NULL)
 {
 	m_id = -1;
 
@@ -43,4 +45,25 @@ void CCameraInfo::SaveVideo(CString path, CString timestamp)
 void CCameraInfo::setMCADoc(CMCADoc* cameraDoc)
 {
 	m_pCameraDoc = cameraDoc;
+}
+
+BOOL CCameraInfo::IsCameraInUse()
+{
+	if (NULL != m_pCameraDoc)
+		return m_pCameraDoc->IsCameraInUse();
+	return FALSE;
+}
+
+BOOL CCameraInfo::IsCameraIdle()
+{
+	if (NULL != m_pCameraDoc)
+		return m_pCameraDoc->IsCameraIdle();
+	return FALSE;
+}
+
+BOOL CCameraInfo::HasImage()
+{
+	if (NULL != m_pCameraDoc)
+		return m_pCameraDoc->HasImage();
+	return FALSE;
 }

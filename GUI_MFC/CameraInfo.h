@@ -32,5 +32,9 @@ public:
 	}
 
 	void setMCADoc(CMCADoc* cameraDoc);
+
+	BOOL IsCameraInUse();
+	BOOL IsCameraIdle();
+	BOOL HasImage();
 };
 

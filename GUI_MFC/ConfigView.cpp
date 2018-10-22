@@ -441,6 +441,9 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 	if (newValue > 0 && oldValue != newValue) {
 		CMCADoc::SetDuration(newValue);
 		UpdateDurationCtrls();
+
+		// Update Partner View too
+		m_ptrPartnerView->GetDocument()->UpdateSettingsDisplay();
 	}
 	UpdateFrameRateCtrls();
 
@@ -529,11 +532,9 @@ int CConfigView::OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL wri
     return value;
 }
 
-void CConfigView::setPartnerView(CConfigView * partnerView)
+void CConfigView::SetPartnerView(CConfigView * partnerView)
 {
 	m_ptrPartnerView = partnerView;
-	if (NULL != partnerView)
-		partnerView->setPartnerView(this);
 }
 
 // Called when a test image is selected. Sets the new value.

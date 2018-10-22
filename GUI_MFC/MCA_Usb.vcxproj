@@ -220,6 +220,7 @@
     <ClCompile Include="CameraView2.cpp" />
     <ClCompile Include="CameraView1.cpp" />
     <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="ImageResult.cpp" />
     <ClCompile Include="ConfigView.cpp" />
     <ClCompile Include="GrabResult.cpp" />
     <ClCompile Include="ManageDock.cpp" />
@@ -242,6 +243,7 @@
     <ClInclude Include="CameraView2.h" />
     <ClInclude Include="CameraView1.h" />
     <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="ImageResult.h" />
     <ClInclude Include="ConfigView.h" />
     <ClInclude Include="GrabResult.h" />
     <ClInclude Include="ManageDock.h" />

@@ -40,6 +40,11 @@ BEGIN_MESSAGE_MAP(CMCAApp, CWinApp)
 	ON_COMMAND(ID_CAMERA_STARTGRABBING, &CMCAApp::OnStartGrabbing)
 	ON_COMMAND(ID_CAMERA_STOPGRAB, &CMCAApp::OnStopGrab)
 
+	ON_UPDATE_COMMAND_UI(ID_CAMERA_GRABONE, &CMCAApp::OnUpdateGrabOne)
+	ON_UPDATE_COMMAND_UI(ID_CAMERA_STARTGRABBING, &CMCAApp::OnUpdateStartGrabbing)
+	ON_UPDATE_COMMAND_UI(ID_CAMERA_STOPGRAB, &CMCAApp::OnUpdateStopGrab)
+	ON_UPDATE_COMMAND_UI(ID_FILE_IMAGE_SAVE_AS, &CMCAApp::OnUpdateFileImageSaveAs)
+
 	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA1, &CMCAApp::OnNewGrabresultCamera1)
 	ON_COMMAND(ID_NEW_GRABRESULT_CAMERA2, &CMCAApp::OnNewGrabresultCamera2)
 	//
@@ -364,10 +369,20 @@ void CMCAApp::OnOpenCamera()
 	if (m_currentDeviceID == 0) {
 		configView = mainFrm->getConfigViewCamera1();
 		pCameraInfo = &m_cameraInfo1;
+
+		if (NULL != m_cameraInfo2.m_pConfigView) {
+			configView->SetPartnerView(m_cameraInfo2.m_pConfigView);
+			m_cameraInfo2.m_pConfigView->SetPartnerView(configView);
+		}
 	}
 	else if (m_currentDeviceID == 1) {
 		configView = mainFrm->getConfigViewCamera2();
 		pCameraInfo = &m_cameraInfo2;
+
+		if (NULL != m_cameraInfo1.m_pConfigView) {
+			configView->SetPartnerView(m_cameraInfo1.m_pConfigView);
+			m_cameraInfo1.m_pConfigView->SetPartnerView(configView);
+		}
 	}
 
 	CDocument* pNewDoc = NULL;
@@ -401,4 +416,25 @@ void CMCAApp::OnOpenCamera()
 		}
 	}
 	
+}
+
+void CMCAApp::OnUpdateGrabOne(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_cameraInfo1.IsCameraIdle() || m_cameraInfo2.IsCameraIdle());
+}
+
+void CMCAApp::OnUpdateStartGrabbing(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_cameraInfo1.IsCameraIdle() || m_cameraInfo2.IsCameraIdle());
+}
+
+void CMCAApp::OnUpdateStopGrab(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_cameraInfo1.IsCameraInUse() || m_cameraInfo2.IsCameraInUse());
+}
+
+void CMCAApp::OnUpdateFileImageSaveAs(CCmdUI *pCmdUI)
+{
+	// We can only save if we have a valid grab result.
+	pCmdUI->Enable(m_cameraInfo1.HasImage() || m_cameraInfo2.HasImage());
 }

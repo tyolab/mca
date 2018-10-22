@@ -11,6 +11,7 @@
 #include "stdafx.h"
 #include "MCA.h"
 
+#include "ImageResult.h"
 #include "MCADoc.h"
 #include "AutoPacketSizeConfiguration.h"
 
@@ -19,7 +20,7 @@
 using namespace Pylon;
 using namespace GenApi;
 
-const UINT DEFAULT_BUFFER_SIZE = 10000; // for example, 200fps, the buffer can hold 50s of recording
+const UINT DEFAULT_BUFFER_SIZE = 1000; // for example, 200fps, the buffer can hold 50s of recording
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -30,16 +31,18 @@ IMPLEMENT_DYNCREATE(CMCADoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CMCADoc, CDocument)
     //ON_COMMAND(ID_CAMERA_GRABONE, &CMCADoc::OnGrabOne)
-    ON_UPDATE_COMMAND_UI(ID_CAMERA_GRABONE, &CMCADoc::OnUpdateGrabOne)
+    //ON_UPDATE_COMMAND_UI(ID_CAMERA_GRABONE, &CMCADoc::OnUpdateGrabOne)
     //ON_COMMAND(ID_CAMERA_STARTGRABBING, &CMCADoc::OnStartGrabbing)
-    ON_UPDATE_COMMAND_UI(ID_CAMERA_STARTGRABBING, &CMCADoc::OnUpdateStartGrabbing)
+    //ON_UPDATE_COMMAND_UI(ID_CAMERA_STARTGRABBING, &CMCADoc::OnUpdateStartGrabbing)
     //ON_COMMAND(ID_CAMERA_STOPGRAB, &CMCADoc::OnStopGrab)
-    ON_UPDATE_COMMAND_UI(ID_CAMERA_STOPGRAB, &CMCADoc::OnUpdateStopGrab)
+    //ON_UPDATE_COMMAND_UI(ID_CAMERA_STOPGRAB, &CMCADoc::OnUpdateStopGrab)
+	//ON_UPDATE_COMMAND_UI(ID_FILE_IMAGE_SAVE_AS, &CMCADoc::OnUpdateFileImageSaveAs)
+
     ON_COMMAND(ID_NEW_GRABRESULT, &CMCADoc::OnNewGrabresult)
     ON_COMMAND(ID_VIEW_REFRESH, &CMCADoc::OnViewRefresh)
     ON_COMMAND(ID_FILE_SAVE_AS, &CMCADoc::OnFileSaveAs)
     ON_COMMAND(ID_FILE_IMAGE_SAVE_AS, &CMCADoc::OnFileImageSaveAs)
-    ON_UPDATE_COMMAND_UI(ID_FILE_IMAGE_SAVE_AS, &CMCADoc::OnUpdateFileImageSaveAs)
+
     ON_COMMAND( ID_UPDATE_NODES, &CMCADoc::OnUpdateNodes )
 END_MESSAGE_MAP()
 
@@ -301,7 +304,9 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     // filling up the debug output.
     //TRACE(_T("%s\n"), __FUNCTIONW__);
 
-	TRACE(_T("%s: %d image(s) grabbed\n"), __FUNCTIONW__, m_buffer.size());
+	++m_cntGrabbedImages;
+
+	TRACE(_T("%s: Camera #%d - %d image(s) grabbed\n"), __FUNCTIONW__, m_id, m_cntGrabbedImages);
 
     // The m_ptrGrabResult will be accessed from different threads,
     // so we need to protect it with the m_MemberLock.
@@ -311,31 +316,35 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     // released and reused by CInstantCamera.
     m_ptrGrabResult = grabResult;
 
+	if (m_ptrGrabResult.IsValid() && m_ptrGrabResult->GrabSucceeded())
+	{
+		m_buffer.push_back(std::unique_ptr<CImageResult>(new CImageResult(m_ptrGrabResult->GetBuffer(), m_ptrGrabResult->GetImageSize())));
 
-	//if (m_ptrGrabResult.IsValid() && m_ptrGrabResult->GrabSucceeded())
-	//{
-	//	m_buffer.push_back(m_ptrGrabResult);
-	//}
-
-	//while (m_buffer.size() > m_bufferSize)
-	//	m_buffer.pop_front();
+		if (m_buffer.size() > m_bufferSize) {
+			std::unique_ptr<CImageResult>& oldElem = m_buffer.front();
+			oldElem.reset();
+			m_buffer.pop_front();
+		}
+	}
 
     lock.Unlock();
 
     // Tell the document that there is a new image available so it can update the image window.
-    CWnd* pWnd = AfxGetApp()->GetMainWnd();
-    ASSERT(pWnd != NULL);
-    if (pWnd != NULL)
-    {
-        // You must use PostMessage here to separate the grab thread from the GUI thread.
-		if (m_id == 0)
-			pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT_CAMERA1, 0), 0);
-		else if (m_id == 1)
-			pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT_CAMERA2, 0), 0);
-		else
-			pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT, 0), 0);
-    }
-
+	// skip the 4 frames
+	if (1 == (m_cntGrabbedImages % 5)) {
+		CWnd* pWnd = AfxGetApp()->GetMainWnd();
+		ASSERT(pWnd != NULL);
+		if (pWnd != NULL)
+		{
+			// You must use PostMessage here to separate the grab thread from the GUI thread.
+			if (m_id == 0)
+				pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT_CAMERA1, 0), 0);
+			else if (m_id == 1)
+				pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT_CAMERA2, 0), 0);
+			else
+				pWnd->PostMessage(WM_COMMAND, MAKEWPARAM(ID_NEW_GRABRESULT, 0), 0);
+		}
+	}
 	// you cant do that, this is from pylon thread
 	// OnNewGrabresult();
 }
@@ -411,6 +420,7 @@ void CMCADoc::OnGrabStart(Pylon::CInstantCamera& camera)
     m_cntGrabbedImages = 0;
     m_cntSkippedImages = 0;
     m_cntGrabErrors = 0;
+	m_buffer.clear();
 }
 
 
@@ -485,6 +495,26 @@ void CMCADoc::UpdateTitle()
 		SetTitle(m_strPathName);
 }
 
+void CMCADoc::UpdateSettingsDisplay()
+{
+	UpdateAllViews(NULL, UpdateHint_Feature);
+}
+
+BOOL CMCADoc::IsCameraIdle()
+{
+	return m_camera.IsOpen() && !m_camera.IsGrabbing();
+}
+
+BOOL CMCADoc::IsCameraInUse()
+{
+	return m_camera.IsGrabbing();
+}
+
+BOOL CMCADoc::HasImage()
+{
+	return m_ptrGrabResult.IsValid();
+}
+
 
 // Called from the GUI thread when there is a new grab result.
 // You should update the window displaying the image.
@@ -506,12 +536,10 @@ void CMCADoc::OnNewGrabresult()
         // Attention: If you perform lengthy operations, the GUI may become
         // unresponsive as the application doesn't process messages.
 
-        ++m_cntGrabbedImages;
-
         // Convert the grab result to a dib so we can display it on the screen.
         m_bitmapImage.CopyImage(ptr);
 
-		TRACE(_T("%s: %d image(s) received\n"), __FUNCTIONW__, m_cntGrabbedImages);
+		//TRACE(_T("%s: %d image(s) received\n"), __FUNCTIONW__, m_cntGrabbedImages);
     }
     else
     {
@@ -625,14 +653,16 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 	UINT totalFramesNumber = duration * fps;
 	int size = totalFramesNumber > m_buffer.size() ? m_buffer.size() : totalFramesNumber;
 
+	TRACE(_T("%s: Camera #%d, buffer size - %d, saving frames - %d\n"), __FUNCTIONW__, m_id, m_buffer.size(), size);
+
 	if (size > 0) {
 		// Create a video writer object.
 		CVideoWriter videoWriter;
 
 		// The frame rate used for playing the video (playback frame rate).
-		const int cFramesPerSecond = 20;
+		const int cFramesPerSecond = 25;
 		// The quality used for compressing the video.
-		const uint32_t cQuality = 90;
+		const uint32_t cQuality = 100;
 
 		// Map the pixelType
 		CEnumerationPtr pixelFormat = GetPixelFormat();
@@ -640,9 +670,11 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 		EPixelType pixelType = pixelTypeMapper.GetPylonPixelTypeFromNodeValue(pixelFormat->GetIntValue());
 		// Open the video writer.
 				// Set parameters before opening the video writer.
+		uint32_t width = (uint32_t)GetWidth()->GetValue();
+		uint32_t height = (uint32_t)GetHeight()->GetValue();
 		videoWriter.SetParameter(
-			(uint32_t)GetWidth()->GetValue(),
-			(uint32_t)GetHeight()->GetValue(),
+			width,
+			height,
 			pixelType,
 			cFramesPerSecond,
 			cQuality);
@@ -661,12 +693,12 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 		videoWriter.Open(ascii.m_psz);
 
 		try {
-			std::list<Pylon::CGrabResultPtr>::iterator it = m_buffer.end();
+			std::list<std::unique_ptr<CImageResult> >::iterator it = m_buffer.end();
 			while (size-- > 0)
 				--it;
 			while (it != m_buffer.end()) {
-				Pylon::CGrabResultPtr ptrResult = *it;
-				videoWriter.Add(ptrResult);
+				std::unique_ptr<CImageResult>& ptrResult = *it;
+				videoWriter.Add(ptrResult->GetBuffer(), ptrResult->GetImageSize(), pixelType, width, height, 0, ImageOrientation_TopDown);
 				++it;
 			}
 			videoWriter.Close();
@@ -1003,7 +1035,7 @@ void CMCADoc::OnFileImageSaveAs()
 void CMCADoc::OnUpdateFileImageSaveAs(CCmdUI *pCmdUI)
 {
     // We can only save if we have a valid grab result.
-    pCmdUI->Enable(m_ptrGrabResult.IsValid());
+    pCmdUI->Enable(HasImage());
 }
 
 // Called when a camera feature changes its properties.
@@ -1012,6 +1044,6 @@ void CMCADoc::OnUpdateNodes()
     // Check the camera. It may have been removed.
     if (m_camera.IsPylonDeviceAttached())
     {
-        UpdateAllViews(NULL, UpdateHint_Feature);
+		UpdateSettingsDisplay();
     }
 }

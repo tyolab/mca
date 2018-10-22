@@ -122,7 +122,7 @@ private:
 public:
     int OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min = -1, int64_t max = -1, int64_t increment = -1);
 	int OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment);
-	void setPartnerView(CConfigView *partnerView);
+	void SetPartnerView(CConfigView *partnerView);
 
     afx_msg void OnItemchangedDevicelist(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg void OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar );

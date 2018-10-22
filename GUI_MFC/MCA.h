@@ -45,6 +45,10 @@ public:
 	afx_msg void OnStopGrab();
 	afx_msg void OnNewGrabresultCamera1();
 	afx_msg void OnNewGrabresultCamera2();
+	afx_msg void OnUpdateGrabOne(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateStartGrabbing(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateStopGrab(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateFileImageSaveAs(CCmdUI *pCmdUI);
 
     DECLARE_MESSAGE_MAP()
     virtual int ExitInstance();
