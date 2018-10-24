@@ -46,14 +46,15 @@ BEGIN_MESSAGE_MAP(CMCADoc, CDocument)
     ON_COMMAND( ID_UPDATE_NODES, &CMCADoc::OnUpdateNodes )
 END_MESSAGE_MAP()
 
-UINT CMCADoc::m_duration = 2;
+UINT CMCADoc::m_duration = 1;
 UINT CMCADoc::m_bufferSize = DEFAULT_BUFFER_SIZE;
 UINT CMCADoc::m_fps = 0;
 
 // CMCADoc construction/destruction
 CMCADoc::CMCADoc()
     : m_cntGrabbedImages(0)
-    , m_cntSkippedImages(0)
+    , m_cntDroppedImages(0)
+	, m_cntSkippedImages(0)
     , m_cntGrabErrors(0)
     , m_hTestImage(NULL)
     , m_hGain(NULL)
@@ -306,7 +307,7 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
 
 	++m_cntGrabbedImages;
 
-	TRACE(_T("%s: Camera #%d - %d image(s) grabbed\n"), __FUNCTIONW__, m_id, m_cntGrabbedImages);
+	TRACE(_T("%s: Camera #%d - %d image(s) grabbed, %d dropped\n"), __FUNCTIONW__, m_id, m_cntGrabbedImages, m_cntDroppedImages);
 
     // The m_ptrGrabResult will be accessed from different threads,
     // so we need to protect it with the m_MemberLock.
@@ -324,6 +325,7 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
 			std::unique_ptr<CImageResult>& oldElem = m_buffer.front();
 			oldElem.reset();
 			m_buffer.pop_front();
+			++m_cntDroppedImages;
 		}
 	}
 

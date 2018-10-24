@@ -194,7 +194,7 @@ CAPTION "About MCA"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "MCA Version 1.0, developed by TYO Lab",IDC_STATIC,40,10,119,8,SS_NOPREFIX
+    LTEXT           "MCA Version 1.0\n Developed by TYO Lab",IDC_STATIC,40,10,119,8,SS_NOPREFIX
     LTEXT           "",IDC_STATIC,40,25,119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,16,WS_GROUP
 END

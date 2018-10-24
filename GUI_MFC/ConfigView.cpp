@@ -31,7 +31,7 @@ static const int GAIN_MIN = 0;
 static const int GAIN_MAX = 1000;
 
 static const int DURATION_MIN = 1;
-static const int DURATION_MAX = 400;
+static const int DURATION_MAX = 5;
 
 // Stores GenApi enumeration items into MFC ComboBox
 void FillEnumerationListCtrl( GenApi::IEnumeration* pEnum, CComboBox* pCtrl )

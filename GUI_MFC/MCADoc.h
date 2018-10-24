@@ -148,6 +148,7 @@ public:
 protected:
     mutable CCriticalSection m_MemberLock;
     uint64_t m_cntGrabbedImages;
+	uint64_t m_cntDroppedImages;
     uint64_t m_cntSkippedImages;
     uint64_t m_cntGrabErrors;
 

@@ -34,7 +34,7 @@
 #endif
 
 // CMCAApp
-BEGIN_MESSAGE_MAP(CMCAApp, CWinApp)
+BEGIN_MESSAGE_MAP(CMCAApp, CWinAppEx)
 	//
 	ON_COMMAND(ID_CAMERA_GRABONE, &CMCAApp::OnGrabOne)
 	ON_COMMAND(ID_CAMERA_STARTGRABBING, &CMCAApp::OnStartGrabbing)
@@ -50,8 +50,8 @@ BEGIN_MESSAGE_MAP(CMCAApp, CWinApp)
 	//
     ON_COMMAND(ID_APP_ABOUT, &CMCAApp::OnAppAbout)
     // Standard file based document commands
-    ON_COMMAND(ID_FILE_NEW, &CWinApp::OnFileNew)
-    ON_COMMAND(ID_FILE_OPEN, &CWinApp::OnFileOpen)
+    ON_COMMAND(ID_FILE_NEW, &CWinAppEx::OnFileNew)
+    ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
     ON_COMMAND(ID_OPEN_CAMERA, &CMCAApp::OnOpenCamera)
 END_MESSAGE_MAP()
 
@@ -80,7 +80,7 @@ BOOL CMCAApp::InitInstance()
     InitCtrls.dwICC = ICC_WIN95_CLASSES;
     InitCommonControlsEx(&InitCtrls);
 
-    CWinApp::InitInstance();
+    CWinAppEx::InitInstance();
 
     // Standard initialization
     // If you are not using these features and wish to reduce the size
@@ -190,7 +190,7 @@ int CMCAApp::ExitInstance()
     // Releases all pylon resources.
     Pylon::PylonTerminate();
 
-    return CWinApp::ExitInstance();
+    return CWinAppEx::ExitInstance();
 }
 
 // CAboutDlg dialog used for App About
@@ -243,7 +243,7 @@ void CMCAApp::OnStartGrabbing()
 	if (!Pylon::CVideoWriter::IsSupported())
 	{
 		CString strErrorMessage;
-		strErrorMessage.Format(_T("Could not open camera \"%s\""), m_strDeviceFullName);
+		strErrorMessage.Format(_T("Video recording is not supported at the moment. Please install the pylon Supplementary Package for MPEG-4 which is available on the Basler website.\"%s\""));
 		AfxMessageBox(strErrorMessage);
 		return;
 	}
