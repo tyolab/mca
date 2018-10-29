@@ -10,18 +10,21 @@
 */
 #pragma once
 
+#include "ManageDock.h"
+
 class CMCAView;
 
-class CMainFrame : public CFrameWnd
+class CMainFrame : public CMDIFrameWndEx
 {
     
-protected: // create from serialization only
-    CMainFrame();
+// create from serialization only
     DECLARE_DYNCREATE(CMainFrame)
+
+public:
+	CMainFrame();
 
 // Attributes
 protected:
-    CSplitterWnd m_wndSplitter;
 	CSplitterWnd m_wndSplitter2;
 public:
 
@@ -30,8 +33,9 @@ public:
 
 // Overrides
 public:
-    virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
+    //virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
     virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	virtual BOOL LoadFrame(UINT nIDResource, DWORD dwDefaultStyle = WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, CWnd* pParentWnd = nullptr, CCreateContext* pContext = nullptr);
 
 // Implementation
 public:
@@ -42,12 +46,36 @@ public:
     virtual void Dump(CDumpContext& dc) const;
 #endif
 
+	CConfigView* getConfigViewCamera1() {
+		return m_wndManageDock.getConfigView();
+	}
+
+	CConfigView* getConfigViewCamera2() {
+		return m_wndManageDock2.getConfigView();
+	}
+
+
 protected:  // control bar embedded members
-    CStatusBar  m_wndStatusBar;
-    CToolBar    m_wndToolBar;
+    CMFCStatusBar  m_wndStatusBar;
+    CMFCToolBar    m_wndToolBar;
+	//CConfigView m_wndConfigView;
+
+	// Camera Config 
+	CManageDock m_wndManageDock;
+
+	// Camera Config #1
+	CManageDock m_wndManageDock2;
+
 
 // Generated message map functions
 protected:
-    afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-    DECLARE_MESSAGE_MAP()
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnWindowManager();
+	afx_msg void OnViewCustomize();
+	afx_msg LRESULT OnToolbarCreateNew(WPARAM wp, LPARAM lp);
+	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
+	DECLARE_MESSAGE_MAP()
+
+	BOOL CreateDockingWindows();
+	void SetDockingWindowIcons(BOOL bHiColorIcons);
 };

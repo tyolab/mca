@@ -10,17 +10,20 @@
 */
 #pragma once
 
-class CMCADoc;
+#include "MCADoc.h"
 
 class CMCAView : public CScrollView
 {
+private:
+	CMCADoc m_Doc;
+
 protected: // create from serialization only
     CMCAView();
     DECLARE_DYNCREATE(CMCAView)
 
 // Attributes
 public:
-    CMCADoc* GetDocument() const;
+    CMCADoc* GetDocument();
 
 // Operations
 public:
@@ -51,6 +54,9 @@ public:
 };
 
 #ifndef _DEBUG  // debug version in MCAView.cpp
-inline CMCADoc* CMCAView::GetDocument() const
-   { return reinterpret_cast<CMCADoc*>(m_pDocument); }
+inline CMCADoc* CMCAView::GetDocument() 
+{
+	return reinterpret_cast<CMCADoc*>(m_pDocument);
+	//return &m_Doc;
+}
 #endif

@@ -10,6 +10,14 @@
 */
 #pragma once
 
+#include <list>
+#include <memory>
+
+#include <pylon/PylonIncludes.h>
+#include <pylon/usb/BaslerUsbInstantCamera.h>
+
+#include "ImageResult.h"
+
 // Hints to pass to UpdateAllViews(), so we can update specific parts of the GUI.
 enum EUpdateHint
 {
@@ -26,17 +34,57 @@ class CMCADoc :
 
 {
 protected: // create from serialization only
-    CMCADoc();
     DECLARE_DYNCREATE(CMCADoc)
+
+public:
+	CMCADoc();
 
 // Attributes
 public:
     const Pylon::CGrabResultPtr GetGrabResultPtr() const;
     const Pylon::CPylonBitmapImage& GetBitmapImage() const;
     GenApi::IInteger* GetExposureTime();
+	GenApi::IInteger* GetFrameRate();
+	GenApi::IInteger* GetResultingFr() { return NULL; }
+	GenApi::IInteger* GetWidth();
+	GenApi::IInteger* GetHeight();
     GenApi::IInteger* GetGain();
     GenApi::IEnumeration* GetTestImage();
     GenApi::IEnumeration* GetPixelFormat();
+
+	const std::list<std::unique_ptr<CImageResult> >& GetBuffer() {
+		return m_buffer;
+	}
+
+	UINT GetExposureTimeValue();
+	int GetFrameRateValue();
+	int GetResultingFrValue();
+	UINT GetWidthValue();
+	UINT GetHeightValue();
+	UINT GetGainValue();
+
+	void SaveVideo(CString path, CString timestamp);
+
+	static const UINT GetDuration() {
+		return m_duration;
+	}
+	static void SetDuration(UINT duration) {
+		if (duration < 1)
+			return;
+		m_duration = duration;
+	}
+
+	static const UINT GetBufferSize() {
+		return m_bufferSize;
+	}
+
+	static void SetBufferSize(UINT bufferSize) {
+		m_bufferSize = bufferSize;
+	}
+
+	static const UINT GetFPS() {
+		return m_fps;
+	}
 
 // Operations
 public:
@@ -48,6 +96,7 @@ public:
     virtual void Serialize(CArchive& ar);
     virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
     virtual void SetPathName(LPCTSTR lpszPathName, BOOL bAddToMRU = TRUE);
+	virtual BOOL RegisterListeners();
 
 // Implementation
 public:
@@ -82,15 +131,41 @@ public:
     virtual void OnGrabError(Pylon::CInstantCamera& camera, const char* errorMessage);
     virtual void OnCameraDeviceRemoved(Pylon::CInstantCamera& camera);
 
+	void SetID(int id) {
+		m_id = id;
+	}
+
+	int GetID() {
+		return m_id;
+	}
+
+	void UpdateTitle();
+	void UpdateSettingsDisplay();
+	BOOL IsCameraIdle();
+	BOOL IsCameraInUse();
+	BOOL HasImage();
+
 protected:
     mutable CCriticalSection m_MemberLock;
     uint64_t m_cntGrabbedImages;
+	uint64_t m_cntDroppedImages;
     uint64_t m_cntSkippedImages;
     uint64_t m_cntGrabErrors;
 
+	static UINT m_duration;
+	static UINT m_bufferSize;
+	static UINT m_fps; // the real resulting frame rate 
+
 private:
+	int			 m_id;
+	CString		 m_title;
+	BOOL		 m_cameraReady;
+
+	// frame buffer
+	std::list<std::unique_ptr<CImageResult> > m_buffer;
+
     // The camera
-    Pylon::CInstantCamera m_camera;
+    Pylon::CBaslerUsbInstantCamera m_camera;
     // The grab result retrieved from the camera
     Pylon::CGrabResultPtr m_ptrGrabResult;
     // The grab result as a windows DIB to be displayed on the screen
@@ -101,12 +176,18 @@ private:
 
     // Smart pointer to camera features
     GenApi::CIntegerPtr m_ptrExposureTime;
+	GenApi::CIntegerPtr m_ptrHeight;
+	GenApi::CIntegerPtr m_ptrWidth;
+	GenApi::CIntegerPtr m_ptrFrameRate;
     GenApi::CIntegerPtr m_ptrGain;
     GenApi::CEnumerationPtr m_ptrTestImage;
     GenApi::CEnumerationPtr m_ptrPixelFormat;
     // Callback handles
+	GenApi::CallbackHandleType m_hWidth;
+	GenApi::CallbackHandleType m_hHeight;
     GenApi::CallbackHandleType m_hExposureTime;
     GenApi::CallbackHandleType m_hGain;
+	GenApi::CallbackHandleType m_hFrameRate;
     GenApi::CallbackHandleType m_hPixelFormat;
     GenApi::CallbackHandleType m_hTestImage;
 
@@ -122,7 +203,7 @@ public:
     afx_msg void OnUpdateGrabOne(CCmdUI *pCmdUI);
     afx_msg void OnUpdateStartGrabbing(CCmdUI *pCmdUI);
     afx_msg void OnUpdateStopGrab(CCmdUI *pCmdUI);
-    afx_msg void OnFileImageSaveAs();
     afx_msg void OnUpdateFileImageSaveAs(CCmdUI *pCmdUI);
+	afx_msg void OnFileImageSaveAs();
     afx_msg void OnUpdateNodes();
 };
