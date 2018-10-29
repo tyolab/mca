@@ -182,22 +182,18 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
     if (eHint == UpdateHint_All || (eHint & UpdateHint_Feature))
     {
-		UpdateSlider(&m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
-		UpdateSliderText(&m_ctrlWidthText, GetDocument()->GetWidth());
+		UpdateWidthCtrl();
 
-		UpdateSlider(&m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
-		UpdateSliderText(&m_ctrlHeightText, GetDocument()->GetHeight());
+		UpdateHeightCtrl();
 
         // Display the current values.
-        UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime(), EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
-        UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+		UpdateExposureTimeCtrl();
 
-        UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain(), GAIN_MIN, GAIN_MAX);
-        UpdateSliderText(&m_ctrlGainText, GetDocument()->GetGain());
+		UpdateGainCtrl();
 
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
-        UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
-
+		UpdateEnumerationCtrl();
+        
 		UpdateFrameRateCtrls();
 		UpdateDurationCtrls();
     }
@@ -226,6 +222,35 @@ void CConfigView::UpdatePartnerViewCtrls()
 		m_ptrPartnerView->UpdateDurationCtrls();
 		m_ptrPartnerView->Invalidate();
 	}
+}
+
+void CConfigView::UpdateGainCtrl()
+{
+	UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain(), GAIN_MIN, GAIN_MAX);
+	UpdateSliderText(&m_ctrlGainText, GetDocument()->GetGain());
+}
+
+void CConfigView::UpdateEnumerationCtrl()
+{
+	UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
+}
+
+void CConfigView::UpdateExposureTimeCtrl()
+{
+	UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime(), EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
+	UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
+}
+
+void CConfigView::UpdateWidthCtrl()
+{
+	UpdateSlider(&m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
+	UpdateSliderText(&m_ctrlWidthText, GetDocument()->GetWidth());
+}
+
+void CConfigView::UpdateHeightCtrl()
+{
+	UpdateSlider(&m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
+	UpdateSliderText(&m_ctrlHeightText, GetDocument()->GetHeight());
 }
 
 // Called to update value of slider.
@@ -428,12 +453,46 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 	UINT oldValue = 0;
 	int newValue = nPos;
 
+	oldValue = GetDocument()->GetFrameRateValue();
+	newValue = OnScrollTo(pScrollBar, &m_ctrlFrameRateSlider, TRUE, GetDocument()->GetFrameRateValue(), FRAME_RATE_MIN, FRAME_RATE_MAX, 1);
+	if (newValue > 0 && oldValue != newValue) {
+		if (NULL != m_ptrPartnerView)
+			m_ptrPartnerView->GetDocument()->SetFrameRateValue(newValue);
+	}
+
+	oldValue = GetDocument()->GetExposureTimeValue();
     newValue =  OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() , EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
+	if (newValue > 0 && oldValue != newValue) {
+		if (NULL != m_ptrPartnerView)
+			m_ptrPartnerView->GetDocument()->GetExposureTime()->SetValue(newValue);
+	}
+
+	oldValue = GetDocument()->GetGainValue();
     newValue =  OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() , GAIN_MIN, GAIN_MAX);
-	newValue =  OnScroll(pScrollBar, &m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	if (newValue > 0 && oldValue != newValue) {
+		if (NULL != m_ptrPartnerView)
+			m_ptrPartnerView->GetDocument()->GetGain()->SetValue(newValue);
+	}
+
+	/*oldValue = GetDocument()->Get
 	newValue =  OnScroll(pScrollBar, &m_ctrlResultingFrSlider, GetDocument()->GetResultingFr(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	if (newValue > 0 && oldValue != newValue) {
+
+	}*/
+
+	oldValue = GetDocument()->GetHeightValue();
 	newValue =  OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
+	if (newValue > 0 && oldValue != newValue) {
+		if (NULL != m_ptrPartnerView)
+			m_ptrPartnerView->GetDocument()->GetHeight()->SetValue(newValue);
+	}
+
+	oldValue = GetDocument()->GetWidthValue();
 	newValue =  OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
+	if (newValue > 0 && oldValue != newValue) {
+		if (NULL != m_ptrPartnerView)
+			m_ptrPartnerView->GetDocument()->GetWidth()->SetValue(newValue);
+	}
 
 	oldValue = GetDocument()->GetDuration();
 	newValue =  OnScrollTo(pScrollBar, &m_ctrlDurationSlider, TRUE, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX, 1);
@@ -441,16 +500,16 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 	if (newValue > 0 && oldValue != newValue) {
 		CMCADoc::SetDuration(newValue);
 		UpdateDurationCtrls();
-
-		// Update Partner View too
-		m_ptrPartnerView->GetDocument()->UpdateSettingsDisplay();
 	}
 	UpdateFrameRateCtrls();
 
     CFormView::OnHScroll( nSBCode, newValue, pScrollBar );
 
 	// refresh even the window is not focused
-	GetDocument()->UpdateAllViews(NULL, UpdateHint_Feature);
+	GetDocument()->UpdateSettingsDisplay();
+	// Update Partner View too
+	if (NULL != m_ptrPartnerView)
+		m_ptrPartnerView->GetDocument()->UpdateSettingsDisplay();
 }
 
 // Round a value to a valid value

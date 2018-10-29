@@ -74,6 +74,11 @@ public:
 	void UpdateDurationCtrls();
 	void UpdateFrameRateCtrls();
 	void UpdatePartnerViewCtrls();
+	void UpdateGainCtrl();
+	void UpdateEnumerationCtrl();
+	void UpdateExposureTimeCtrl();
+	void UpdateWidthCtrl();
+	void UpdateHeightCtrl();
     
     DECLARE_MESSAGE_MAP()
 private:
