@@ -14,6 +14,25 @@
 #include "MCADoc.h"
 #include "ConfigView.h"
 
+static const int RESOLUTION_MIN = 320;
+static const int RESOLUTION_MAX = 3200;
+static const int RESOLUTION_INC = 32;
+
+static const int FRAME_RATE_MIN = 25;
+static const int FRAME_RATE_MAX = 600;
+
+static const int RESULTING_FR_MIN = 25;
+static const int RESULTING_FR_MAX = 600;
+
+static const int EXPOSURE_TIME_MIN = 1;
+static const int EXPOSURE_TIME_MAX = 3000;
+
+static const int GAIN_MIN = 0;
+static const int GAIN_MAX = 1000;
+
+static const int DURATION_MIN = 1;
+static const int DURATION_MAX = 5;
+
 // Stores GenApi enumeration items into MFC ComboBox
 void FillEnumerationListCtrl( GenApi::IEnumeration* pEnum, CComboBox* pCtrl )
 {
@@ -57,12 +76,41 @@ CConfigView::CConfigView()
 : CFormView( CConfigView::IDD )
 , m_updatingList( FALSE )
 {
-
+	m_dummyDoc = new CMCADoc;
+	m_id = -1;
 }
 
 
 CConfigView::~CConfigView()
 {
+	delete m_dummyDoc;
+}
+
+CConfigView * CConfigView::CreateOne(CWnd * pParent)
+{
+	CConfigView *p_ManagePanel = new CConfigView;
+
+	CRect rc;
+	pParent->GetWindowRect(&rc);
+	//CMyFormView *pFormView = NULL; 
+   //CRuntimeClass *pRuntimeClass = RUNTIME_CLASS(CMyFormView); 
+   //pFormView = (CMyFormView *)pRuntimeClass->CreateObject(); 
+
+   //CDockableFormViewAppDoc *pDoc = CDockableFormViewAppDoc::CreateOne();////////////////////////////////////////68 //pFormView->m_pDocument = pDoc;//////////////////////////////////////////////////////////////////////////////69 CCreateContext *pContext = NULL;
+#if 0 
+	if (!p_ManagePanel->CreateEx(0, NULL, NULL, WS_CHILD | WS_VISIBLE, CRect(0, 0, 205, 157),
+		pParent, -1, nullptr))
+#else 
+	if (!p_ManagePanel->Create(NULL, NULL, AFX_WS_DEFAULT_VIEW, CRect(0, 0, rc.Width(), rc.Height()), pParent, AFX_IDW_PANE_FIRST, NULL))
+#endif 
+		//if( !pFormView->CreateEx( 0, AfxRegisterWndClass(0, 0, 0, 0), NULL, 
+		// WS_CHILD | WS_VISIBLE, CRect( 0, 0, 205, 157), pParent, -1, pContext) ) 
+	{
+		AfxMessageBox(_T("Failed in creating CMyFormView"));
+
+	}
+	// p_ManagePanel->OnInitialUpdate();
+	return p_ManagePanel;
 }
 
 
@@ -70,8 +118,18 @@ void CConfigView::DoDataExchange( CDataExchange* pDX )
 {
     CFormView::DoDataExchange( pDX );
     DDX_Control( pDX, IDC_DEVICELIST, m_deviceListCtrl );
-    DDX_Control( pDX, IDC_EXPOSURE_SLIDER, m_ctrlExposureSlider );
-    DDX_Control( pDX, IDC_EXPOSURE_STATIC, m_ctrlExposureText );
+	DDX_Control(pDX, IDC_WIDTH_SLIDER, m_ctrlWidthSlider);
+	DDX_Control(pDX, IDC_WIDTH_STATIC, m_ctrlWidthText);
+    DDX_Control( pDX, IDC_HEIGHT_SLIDER, m_ctrlHeightSlider );
+    DDX_Control( pDX, IDC_HEIGHT_STATIC, m_ctrlHeightText );
+	DDX_Control(pDX, IDC_FRAME_RATE_SLIDER, m_ctrlFrameRateSlider);
+	DDX_Control(pDX, IDC_FRAME_RATE_STATIC, m_ctrlFrameRateText);
+	DDX_Control(pDX, IDC_RESULTING_FR_SLIDER, m_ctrlResultingFrSlider);
+	DDX_Control(pDX, IDC_RESULTING_FR_STATIC, m_ctrlResultingFrText);
+	DDX_Control(pDX, IDC_EXPOSURE_SLIDER, m_ctrlExposureSlider);
+	DDX_Control(pDX, IDC_EXPOSURE_STATIC, m_ctrlExposureText);
+	DDX_Control(pDX, IDC_DURATION_SLIDER, m_ctrlDurationSlider);
+	DDX_Control(pDX, IDC_DURATION_STATIC, m_ctrlDurationText);
     DDX_Control( pDX, IDC_GAIN_SLIDER, m_ctrlGainSlider );
     DDX_Control( pDX, IDC_GAIN_STATIC, m_ctrlGainText );
     DDX_Control( pDX, IDC_TESTIMAGE_COMBO, m_ctrlTestImage );
@@ -98,7 +156,9 @@ void CConfigView::AssertValid() const
 
 CMCADoc* CConfigView::GetDocument() // non-debug version is inline
 {
-    ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CMCADoc)));
+	// the config view is not associated with te camera view yet
+	 if (NULL == m_pDocument || !(m_pDocument->IsKindOf(RUNTIME_CLASS(CMCADoc))))
+		return m_dummyDoc;
     return (CMCADoc*)m_pDocument;
 }
 
@@ -122,25 +182,59 @@ void CConfigView::OnUpdate(CView* pSender, LPARAM lHint, CObject* pHint)
 
     if (eHint == UpdateHint_All || (eHint & UpdateHint_Feature))
     {
+		UpdateSlider(&m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
+		UpdateSliderText(&m_ctrlWidthText, GetDocument()->GetWidth());
+
+		UpdateSlider(&m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
+		UpdateSliderText(&m_ctrlHeightText, GetDocument()->GetHeight());
+
         // Display the current values.
-        UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime());
+        UpdateSlider(&m_ctrlExposureSlider, GetDocument()->GetExposureTime(), EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
         UpdateSliderText(&m_ctrlExposureText, GetDocument()->GetExposureTime());
 
-        UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain());
+        UpdateSlider(&m_ctrlGainSlider, GetDocument()->GetGain(), GAIN_MIN, GAIN_MAX);
         UpdateSliderText(&m_ctrlGainText, GetDocument()->GetGain());
 
         UpdateEnumeration(&m_ctrlTestImage, GetDocument()->GetTestImage());
         UpdateEnumeration(&m_ctrlPixelFormat, GetDocument()->GetPixelFormat());
+
+		UpdateFrameRateCtrls();
+		UpdateDurationCtrls();
     }
 }
 
+void CConfigView::UpdateDurationCtrls()
+{
+	BOOL readable, writable;
+	readable = writable = GetDocument() != m_dummyDoc;
+	UpdateSlider(&m_ctrlDurationSlider, CMCADoc::GetDuration(), readable, writable, DURATION_MIN, DURATION_MAX);
+	UpdateSliderText(&m_ctrlDurationText, CMCADoc::GetDuration(), writable);
+}
+
+void CConfigView::UpdateFrameRateCtrls()
+{
+	UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate(), GetDocument()->GetFrameRateValue());
+
+	UpdateSlider(&m_ctrlResultingFrSlider, -1, FALSE, FALSE, RESULTING_FR_MIN, RESULTING_FR_MAX);
+	UpdateSliderText(&m_ctrlResultingFrText, GetDocument()->GetResultingFr(), GetDocument()->GetResultingFrValue());
+}
+
+void CConfigView::UpdatePartnerViewCtrls()
+{
+	if (NULL != m_ptrPartnerView) {
+		m_ptrPartnerView->UpdateDurationCtrls();
+		m_ptrPartnerView->Invalidate();
+	}
+}
+
 // Called to update value of slider.
-void CConfigView::UpdateSlider( CSliderCtrl *pCtrl, GenApi::IInteger* pInteger )
+void CConfigView::UpdateSlider( CSliderCtrl *pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max)
 {
     if (GenApi::IsReadable( pInteger ))
     {
-        int64_t minimum = pInteger->GetMin();
-        int64_t maximum = pInteger->GetMax();
+        int64_t minimum = min != -1 ? min: pInteger->GetMin();
+        int64_t maximum = max != -1 ? max : pInteger->GetMax();
         int64_t value = pInteger->GetValue();
 
         // Possible loss of data because Windows controls only supports 
@@ -151,20 +245,60 @@ void CConfigView::UpdateSlider( CSliderCtrl *pCtrl, GenApi::IInteger* pInteger )
     pCtrl->EnableWindow( GenApi::IsWritable( pInteger ) );
 }
 
-// Called to update the value of a label.
-void CConfigView::UpdateSliderText( CStatic *pString, GenApi::IInteger* pInteger )
+
+// Called to update value of slider.
+void CConfigView::UpdateSlider(CSliderCtrl *pCtrl, int64_t number, BOOL readable, BOOL writable, int64_t minimum, int64_t maximum)
 {
-    if (GenApi::IsReadable( pInteger ))
-    {
-        // Set the value as a string in wide character format.
-        pString->SetWindowText(CUtf82W(pInteger->ToString().c_str()));
-    }
-    else
-    {
-        pString->SetWindowText( _T( "n/a" ) );
-    }
-    pString->EnableWindow( GenApi::IsWritable( pInteger ) );
+	if (readable)
+	{
+		// Possible loss of data because Windows controls only supports 
+		// 32-bitness while GenApi supports 64-bitness.
+		pCtrl->SetRange(static_cast<int>(minimum), static_cast<int>(maximum));
+		pCtrl->SetPos(static_cast<int>(number));
+	}
+	pCtrl->EnableWindow(writable);
 }
+
+// Called to update the value of a label.
+void CConfigView::UpdateSliderText( CStatic *pString, GenApi::IInteger* pInteger, int64_t defaultValue)
+{
+	CString text;
+	BOOL readable = GenApi::IsReadable(pInteger);
+	if (readable)
+		text = CUtf82W(pInteger->ToString().c_str());
+	else if (defaultValue != -1) {
+		text.Format(_T("%I64d"), defaultValue);
+		readable = TRUE;
+	}
+	else
+		text = "n/a";
+    pString->EnableWindow( GenApi::IsWritable( pInteger ) );
+	UpdateSliderText(pString, readable, text);
+}
+
+// Called to update the value of a label.
+void CConfigView::UpdateSliderText(CStatic *pString, uint64_t value, BOOL writable)
+{
+	CString strValue;
+	strValue.Format(_T("%d"), value);
+	pString->SetWindowText(strValue);
+
+	pString->EnableWindow(writable);
+}
+
+void CConfigView::UpdateSliderText(CStatic * pString, BOOL readable, CString text)
+{
+	if (readable)
+	{
+		// Set the value as a string in wide character format.
+		pString->SetWindowText(text);
+	}
+	else
+	{
+		pString->SetWindowText(_T("n/a"));
+	}
+}
+
 
 // Called to update the enumeration in a combo box.
 void CConfigView::UpdateEnumeration( CComboBox *pCtrl, GenApi::IEnumeration* pEnum )
@@ -198,7 +332,6 @@ void CConfigView::UpdateEnumeration( CComboBox *pCtrl, GenApi::IEnumeration* pEn
 
 }
 
-
 void CConfigView::FillDeviceListCtrl()
 {
     // Remember selection before deleting items so it can be restored after refilling.
@@ -214,24 +347,27 @@ void CConfigView::FillDeviceListCtrl()
     const Pylon::DeviceInfoList_t& devices = theApp.GetDeviceInfoList();
     if (!devices.empty())
     {
-        int i = 0;
-        for (Pylon::DeviceInfoList_t::const_iterator it = devices.begin(); it != devices.end(); ++it)
-        {
-            // Get the pointer to the current device info.
-            const Pylon::CDeviceInfo* const pDeviceInfo = &(*it);
+        int i = 0, count = 0;
+		for (Pylon::DeviceInfoList_t::const_iterator it = devices.begin(); it != devices.end(); ++it)
+		{
+			// Get the pointer to the current device info.
+			const Pylon::CDeviceInfo* const pDeviceInfo = &(*it);
 
-            // Add the item to the list.
-            int nItem = m_deviceListCtrl.InsertItem( i++, CUtf82W( pDeviceInfo->GetFriendlyName() ) );
+			if (m_id > -1 && count == m_id) {
+				// Add the item to the list.
+				int nItem = m_deviceListCtrl.InsertItem(i++, CUtf82W(pDeviceInfo->GetFriendlyName()));
 
-            // Remember the pointer to the device info.
-            m_deviceListCtrl.SetItemData( nItem, (DWORD_PTR) pDeviceInfo );
+				// Remember the pointer to the device info.
+				m_deviceListCtrl.SetItemData(nItem, (DWORD_PTR)pDeviceInfo);
 
-            // Restore selection if necessary.
-            if (pDeviceInfo->GetFullName() == fullNameSelected)
-            {
-                m_deviceListCtrl.SetItemState( nItem, LVIS_SELECTED, LVIS_SELECTED );
-                m_deviceListCtrl.SetSelectionMark( nItem );
-            }
+				// Restore selection if necessary.
+				if (pDeviceInfo->GetFullName() == fullNameSelected)
+				{
+					m_deviceListCtrl.SetItemState(nItem, LVIS_SELECTED, LVIS_SELECTED);
+					m_deviceListCtrl.SetSelectionMark(nItem);
+				}
+			}
+			++count;
         }
     }
 
@@ -272,7 +408,7 @@ void CConfigView::OnItemchangedDevicelist( NMHDR *pNMHDR, LRESULT *pResult )
         // To use the MFC document/view services, we need to pass the full name to the app class.
         // This way, the app class can pass it to the OpenDocumentFile function.
         CString strFullname(CUtf82W( m_fullNameSelected.c_str() ));
-        if (theApp.SetDeviceFullName( strFullname ) != strFullname)
+        if (theApp.SetDeviceFullName( strFullname, GetID() ) != strFullname)
         {
             theApp.GetMainWnd()->PostMessage( WM_COMMAND, MAKEWPARAM( ID_OPEN_CAMERA, 0 ), 0 );
         }
@@ -289,10 +425,32 @@ void CConfigView::OnItemchangedDevicelist( NMHDR *pNMHDR, LRESULT *pResult )
 void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 {
     // Forward the scroll message to the slider controls.
-    nPos = OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() );
-    nPos = OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() );
+	UINT oldValue = 0;
+	int newValue = nPos;
 
-    CFormView::OnHScroll( nSBCode, nPos, pScrollBar );
+    newValue =  OnScroll( pScrollBar, &m_ctrlExposureSlider, GetDocument()->GetExposureTime() , EXPOSURE_TIME_MIN, EXPOSURE_TIME_MAX);
+    newValue =  OnScroll( pScrollBar, &m_ctrlGainSlider, GetDocument()->GetGain() , GAIN_MIN, GAIN_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlResultingFrSlider, GetDocument()->GetResultingFr(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlHeightSlider, GetDocument()->GetHeight(), RESOLUTION_MIN, RESOLUTION_MAX);
+	newValue =  OnScroll(pScrollBar, &m_ctrlWidthSlider, GetDocument()->GetWidth(), RESOLUTION_MIN, RESOLUTION_MAX);
+
+	oldValue = GetDocument()->GetDuration();
+	newValue =  OnScrollTo(pScrollBar, &m_ctrlDurationSlider, TRUE, GetDocument()->GetDuration(), DURATION_MIN, DURATION_MAX, 1);
+
+	if (newValue > 0 && oldValue != newValue) {
+		CMCADoc::SetDuration(newValue);
+		UpdateDurationCtrls();
+
+		// Update Partner View too
+		m_ptrPartnerView->GetDocument()->UpdateSettingsDisplay();
+	}
+	UpdateFrameRateCtrls();
+
+    CFormView::OnHScroll( nSBCode, newValue, pScrollBar );
+
+	// refresh even the window is not focused
+	GetDocument()->UpdateAllViews(NULL, UpdateHint_Feature);
 }
 
 // Round a value to a valid value
@@ -312,17 +470,46 @@ int64_t RoundTo( int64_t newValue, int64_t oldValue, int64_t minimum, int64_t ma
 }
 
 // Update a slider and set a valid value.
-UINT CConfigView::OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger )
+int CConfigView::OnScroll(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::IInteger* pInteger, int64_t min, int64_t max, int64_t inc)
+{
+	BOOL writable = GenApi::IsWritable(pInteger);
+	int64_t value = 0;
+
+	if (writable) {
+		value = pInteger->GetValue();
+		const int64_t minimum = min != -1 ? min : pInteger->GetMin();
+		const int64_t maximum = max != -1 ? max : pInteger->GetMax();
+		const int64_t increment = inc != -1 ? inc : pInteger->GetInc();
+
+		// Try to set the value. If successful, update the scroll position.
+		try
+		{
+			int64_t newValue = OnScrollTo(pScrollBar, pCtrl, writable, value, minimum, maximum, increment);
+			if (newValue != -1 && newValue != value) {
+				pInteger->SetValue(newValue);
+				return newValue;
+			}
+		}
+		catch (GenICam::GenericException &e)
+		{
+			UNUSED(e);
+			TRACE("Failed to set '%s':%s", pInteger->GetNode()->GetDisplayName().c_str(), e.GetDescription());
+		}
+		catch (...)
+		{
+			TRACE("Failed to set '%s'", pInteger->GetNode()->GetDisplayName().c_str());
+		}
+	}
+	return value;
+}
+int CConfigView::OnScrollTo(CScrollBar* pScrollBar, CSliderCtrl* pCtrl, BOOL writable, int64_t value, int64_t minimum, int64_t maximum, int64_t increment)
 {
     if (pScrollBar->GetSafeHwnd() == pCtrl->GetSafeHwnd())
     {
-        if (GenApi::IsWritable( pInteger ))
+        if (writable)
         {   
             // Fetch current value, range, and increment of the camera feature.
-            int64_t value = pInteger->GetValue();
-            const int64_t minimum = pInteger->GetMin();
-            const int64_t maximum = pInteger->GetMax();
-            const int64_t increment = pInteger->GetInc();
+
 
             // Adjust the pointer to the slider to get the correct position.
             int64_t newvalue = 0;
@@ -333,30 +520,21 @@ UINT CConfigView::OnScroll( CScrollBar* pScrollBar, CSliderCtrl* pCtrl, GenApi::
             int64_t roundvalue = RoundTo( newvalue, value, minimum, maximum, increment );
             if (roundvalue == value)
             {
-                return 0;
+                return roundvalue;
             }
 
-            // Try to set the value. If successful, update the scroll position.
-            try
-            {
-                pInteger->SetValue( roundvalue );
-                pSlider->SetPos( (int) roundvalue );
-            }
-            catch (GenICam::GenericException &e)
-            {
-                UNUSED( e );
-                TRACE( "Failed to set '%s':%s", pInteger->GetNode()->GetDisplayName().c_str(), e.GetDescription() );
-            }
-            catch (...)
-            {
-                TRACE( "Failed to set '%s'", pInteger->GetNode()->GetDisplayName().c_str() );
-            }
-
-            return static_cast<UINT>(value);
+			pSlider->SetPos((int)roundvalue);
+            return static_cast<UINT>(roundvalue);
         }
     }
+	//if (pCtrl == &m_ctrlDurationSlider)
+	//	return 1;
+    return value;
+}
 
-    return 0;
+void CConfigView::SetPartnerView(CConfigView * partnerView)
+{
+	m_ptrPartnerView = partnerView;
 }
 
 // Called when a test image is selected. Sets the new value.
