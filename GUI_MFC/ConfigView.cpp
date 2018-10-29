@@ -209,7 +209,10 @@ void CConfigView::UpdateDurationCtrls()
 
 void CConfigView::UpdateFrameRateCtrls()
 {
-	UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRate(), FRAME_RATE_MIN, FRAME_RATE_MAX);
+	BOOL readable, writable;
+	readable = writable = GetDocument() != m_dummyDoc;
+
+	UpdateSlider(&m_ctrlFrameRateSlider, GetDocument()->GetFrameRateValue(), readable, writable, FRAME_RATE_MIN, FRAME_RATE_MAX);
 	UpdateSliderText(&m_ctrlFrameRateText, GetDocument()->GetFrameRate(), GetDocument()->GetFrameRateValue());
 
 	UpdateSlider(&m_ctrlResultingFrSlider, -1, FALSE, FALSE, RESULTING_FR_MIN, RESULTING_FR_MAX);
@@ -456,6 +459,7 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 	oldValue = GetDocument()->GetFrameRateValue();
 	newValue = OnScrollTo(pScrollBar, &m_ctrlFrameRateSlider, TRUE, GetDocument()->GetFrameRateValue(), FRAME_RATE_MIN, FRAME_RATE_MAX, 1);
 	if (newValue > 0 && oldValue != newValue) {
+		GetDocument()->SetFrameRateValue(newValue);
 		if (NULL != m_ptrPartnerView)
 			m_ptrPartnerView->GetDocument()->SetFrameRateValue(newValue);
 	}
@@ -501,7 +505,7 @@ void CConfigView::OnHScroll( UINT nSBCode, UINT nPos, CScrollBar* pScrollBar )
 		CMCADoc::SetDuration(newValue);
 		UpdateDurationCtrls();
 	}
-	UpdateFrameRateCtrls();
+	// UpdateFrameRateCtrls();
 
     CFormView::OnHScroll( nSBCode, newValue, pScrollBar );
 

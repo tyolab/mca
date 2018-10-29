@@ -832,15 +832,19 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 	try
 	{
-		CString deviceName = CString(lpszPathName).MakeLower();
+		const Pylon::String_t strDeviceFullName = GetString_t(lpszPathName);
+		Pylon::IPylonDevice* pDevice = Pylon::CTlFactory::GetInstance().CreateDevice(strDeviceFullName);
+
+		CString deviceName = CString(pDevice->GetDeviceInfo().GetFriendlyName()).MakeLower();
 		BOOL isUSBCamera = FALSE;
 
+		// Valid func only after camera is attached?
 		isUSBCamera = m_camera->IsUsb();
 
-		//if (!isUSBCamera) {
-		//	if (deviceName.Find(_T("ace")) == 0 || deviceName.Find(_T("daa")) == 0 || deviceName.Find(_T("pua")) == 0)
-		//		isUSBCamera = TRUE;
-		//}
+		if (!isUSBCamera) {
+			if (deviceName.Find(_T("basler aca")) == 0 || deviceName.Find(_T("basler daa")) == 0 || deviceName.Find(_T("basler pua")) == 0)
+				isUSBCamera = TRUE;
+		}
 
 		CBaslerUsbInstantCamera *ptrUsbCamera = nullptr;
 		CInstantCamera* ptrCamera = (isUSBCamera ? (ptrUsbCamera = new CBaslerUsbInstantCamera()) : new CInstantCamera());
@@ -853,8 +857,7 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 		// Create the device and attach it to CInstantCamera.
 		// Let CInstantCamera take care of destroying the device.
-		const Pylon::String_t strDeviceFullName = GetString_t(lpszPathName);
-		Pylon::IPylonDevice* pDevice = Pylon::CTlFactory::GetInstance().CreateDevice(strDeviceFullName);
+	
 		m_camera->Attach(pDevice, Pylon::Cleanup_Delete);
 
 		// Open camera.
