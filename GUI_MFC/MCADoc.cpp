@@ -52,17 +52,18 @@ UINT CMCADoc::m_fps = 0;
 
 // CMCADoc construction/destruction
 CMCADoc::CMCADoc()
-    : m_cntGrabbedImages(0)
-    , m_cntDroppedImages(0)
+	: m_cntGrabbedImages(0)
+	, m_cntDroppedImages(0)
 	, m_cntSkippedImages(0)
-    , m_cntGrabErrors(0)
-    , m_hTestImage(NULL)
-    , m_hGain(NULL)
-    , m_hExposureTime(NULL)
+	, m_cntGrabErrors(0)
+	, m_hTestImage(NULL)
+	, m_hGain(NULL)
+	, m_hExposureTime(NULL)
 	, m_hWidth(NULL)
 	, m_hHeight(NULL)
 	, m_hFrameRate(NULL)
 	, m_cameraReady(FALSE)
+	, m_camera(new CInstantCamera())
 {
     // TODO: add one-time construction code here
 	m_id = -1;
@@ -175,7 +176,7 @@ void CMCADoc::DeleteContents()
     m_ptrGrabResult.Release();
 
     // Perform cleanup.
-    if (m_camera.IsPylonDeviceAttached())
+    if (m_camera->IsPylonDeviceAttached())
     {
         try
         {
@@ -227,11 +228,11 @@ void CMCADoc::DeleteContents()
 
             // Close camera.
             // This will also stop the grab.
-            m_camera.Close();
+            m_camera->Close();
 
             // Free the camera.
             // This will also stop the grab and close the camera.
-            m_camera.DestroyDevice();
+            m_camera->DestroyDevice();
 
             // Tell all the views that there is no camera anymore.
             UpdateAllViews(NULL, UpdateHint_All);
@@ -260,7 +261,7 @@ void CMCADoc::OnViewRefresh()
         // Always update the device list and the image
         EUpdateHint hint = EUpdateHint(UpdateHint_DeviceList | UpdateHint_Image);
 
-        if (m_camera.IsPylonDeviceAttached())
+        if (m_camera->IsPylonDeviceAttached())
         {
             // in this SDI application the document will be reused.
             // We need to update the window title, in case the camera has been removed.
@@ -443,8 +444,8 @@ void CMCADoc::OnGrabStopped(Pylon::CInstantCamera& camera)
     TRACE(_T("%s Grabbed: %I64u; Errors: %I64u\n"), __FUNCTIONW__, m_cntGrabbedImages, m_cntGrabErrors);
 
     // Deregister all configurations.
-    m_camera.DeregisterConfiguration(&m_singleConfiguration);
-    m_camera.DeregisterConfiguration(&m_continousConfiguration);
+    m_camera->DeregisterConfiguration(&m_singleConfiguration);
+    m_camera->DeregisterConfiguration(&m_continousConfiguration);
 }
 
 
@@ -466,7 +467,7 @@ void CMCADoc::OnCameraDeviceRemoved(Pylon::CInstantCamera& camera)
         CSingleLock lock(&m_MemberLock, TRUE);
         m_ptrGrabResult.Release();
         m_bitmapImage.Release();
-        m_camera.DestroyDevice();
+        m_camera->DestroyDevice();
 
         // Tell the document the camera and the image are gone and let it update the GUI.
         CWnd* pWnd = AfxGetApp()->GetMainWnd();
@@ -504,17 +505,24 @@ void CMCADoc::UpdateSettingsDisplay()
 
 BOOL CMCADoc::IsCameraIdle()
 {
-	return m_camera.IsOpen() && !m_camera.IsGrabbing();
+	return m_camera->IsOpen() && !m_camera->IsGrabbing();
 }
 
 BOOL CMCADoc::IsCameraInUse()
 {
-	return m_camera.IsGrabbing();
+	return m_camera->IsGrabbing();
 }
 
 BOOL CMCADoc::HasImage()
 {
 	return m_ptrGrabResult.IsValid();
+}
+
+CBaslerUsbInstantCamera * CMCADoc::GetUsbCameraPtr()
+{
+	if (m_camera->IsUsb())
+		return dynamic_cast<CBaslerUsbInstantCamera*>(m_camera.get());
+	return nullptr;
 }
 
 
@@ -611,9 +619,9 @@ int CMCADoc::GetFrameRateValue()
 	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
 	if (!m_cameraReady)
 		return -1;
-	else if (m_ptrFrameRate.IsValid())
-		return m_ptrFrameRate->GetValue();
-	return m_camera.AcquisitionFrameRate.GetValue();
+	
+	CBaslerUsbInstantCamera *ptrUsbCamera = GetUsbCameraPtr();
+	return nullptr != ptrUsbCamera ? ptrUsbCamera->AcquisitionFrameRate.GetValue() : -1;
 }
 
 int CMCADoc::GetResultingFrValue()
@@ -622,11 +630,15 @@ int CMCADoc::GetResultingFrValue()
 	if (!m_cameraReady)
 		return -1;
 
+	CBaslerUsbInstantCamera *ptrUsbCamera = GetUsbCameraPtr();
+	if (nullptr == ptrUsbCamera)
+		return  -1;
+
 	if (0 == m_id) {
-		m_fps = m_camera.ResultingFrameRate.GetValue();
+		m_fps = ptrUsbCamera->ResultingFrameRate.GetValue();
 		return m_fps;
 	}
-	return m_camera.ResultingFrameRate.GetValue();
+	return ptrUsbCamera->ResultingFrameRate.GetValue();
 }
 
 UINT CMCADoc::GetHeightValue()
@@ -646,6 +658,15 @@ UINT CMCADoc::GetGainValue()
 {
 	// GenICam smart pointers will throw an exception if you try to access a NULL pointer.
 	return (m_ptrGain.IsValid()) ? m_ptrGain->GetValue() : 0;
+}
+
+void CMCADoc::SetFrameRateValue(UINT fr)
+{
+	if (m_camera->IsUsb()) {
+		CBaslerUsbInstantCamera* ptrUsbCamera = GetUsbCameraPtr();
+		if (nullptr != ptrUsbCamera)
+			ptrUsbCamera->AcquisitionFrameRate.SetValue(fr);
+	}
 }
 
 void CMCADoc::SaveVideo(CString path, CString timestamp)
@@ -733,7 +754,7 @@ GenApi::IEnumeration* CMCADoc::GetPixelFormat()
 void CMCADoc::OnGrabOne()
 {
     // Camera may have been disconnected.
-    if (!m_camera.IsOpen() || m_camera.IsGrabbing())
+    if (!m_camera->IsOpen() || m_camera->IsGrabbing())
     {
         return;
     }
@@ -741,23 +762,23 @@ void CMCADoc::OnGrabOne()
     // Since we may switch between single and continuous shot, we must configure the camera accordingly.
     // The predefined configurations are only executed once when the camera is opened.
     // To be able to use them in our use case, we just call them explicitly to apply the configuration.
-    m_singleConfiguration.OnOpened(m_camera);
+    m_singleConfiguration.OnOpened(*m_camera.get());
 
     // Grab one image.
     // When the image is received, pylon will call out the OnImageGrab() handler.
-    m_camera.StartGrabbing(1, Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
+    m_camera->StartGrabbing(1, Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
 }
 
 
 void CMCADoc::OnUpdateGrabOne(CCmdUI *pCmdUI)
 {
-    pCmdUI->Enable(m_camera.IsOpen() && !m_camera.IsGrabbing());
+    pCmdUI->Enable(m_camera->IsOpen() && !m_camera->IsGrabbing());
 }
 
 
 void CMCADoc::OnUpdateStartGrabbing(CCmdUI *pCmdUI)
 {
-    pCmdUI->Enable(m_camera.IsOpen() && !m_camera.IsGrabbing());
+    pCmdUI->Enable(m_camera->IsOpen() && !m_camera->IsGrabbing());
 }
 
 
@@ -765,7 +786,7 @@ void CMCADoc::OnUpdateStartGrabbing(CCmdUI *pCmdUI)
 void CMCADoc::OnStartGrabbing()
 {
     // Camera may have been disconnected.
-    if (!m_camera.IsOpen() || m_camera.IsGrabbing())
+    if (!m_camera->IsOpen() || m_camera->IsGrabbing())
     {
         return;
     }
@@ -773,11 +794,11 @@ void CMCADoc::OnStartGrabbing()
     // Since we may switch between single and continuous shot, we must configure the camera accordingly.
     // The predefined configurations are only executed once when the camera is opened.
     // To be able to use them in our use case, we just call them explicitly to apply the configuration.
-    m_continousConfiguration.OnOpened(m_camera);
+    m_continousConfiguration.OnOpened(*m_camera.get());
 
     // Start grabbing until StopGrabbing() is called.
-    m_camera.StartGrabbing(Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
-	// m_camera.StartGrabbing(m_bufferSize);
+    m_camera->StartGrabbing(Pylon::GrabStrategy_OneByOne, Pylon::GrabLoop_ProvidedByInstantCamera);
+	// m_camera->StartGrabbing(m_bufferSize);
 	// retrieve the result in main thread
 }
 
@@ -786,16 +807,16 @@ void CMCADoc::OnStartGrabbing()
 void CMCADoc::OnStopGrab()
 {
     // Camera may have been disconnected.
-    if (m_camera.IsGrabbing())
+    if (NULL != m_camera && m_camera->IsGrabbing())
     {
-        m_camera.StopGrabbing();
+        m_camera->StopGrabbing();
     }
 }
 
 
 void CMCADoc::OnUpdateStopGrab(CCmdUI *pCmdUI)
 {
-    pCmdUI->Enable(m_camera.IsOpen() && m_camera.IsGrabbing());
+    pCmdUI->Enable(NULL != m_camera ? m_camera->IsOpen() && m_camera->IsGrabbing() : FALSE);
 }
 
 // We overwrite the OnOpenDocument handler to open a camera device.
@@ -807,41 +828,55 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
     // Make sure everything is closed.
     DeleteContents();
 
-    ASSERT(!m_camera.IsPylonDeviceAttached());
+	try
+	{
+		CString deviceName = CString(lpszPathName).MakeLower();
+		BOOL isUSBCamera = FALSE;
 
-    try
-    {
-        // Add the AutoPacketSizeConfiguration and let pylon delete it when not needed anymore.
-        m_camera.RegisterConfiguration(new CAutoPacketSizeConfiguration(), Pylon::RegistrationMode_Append, Pylon::Cleanup_Delete);
+		isUSBCamera = m_camera->IsUsb();
 
-        // Create the device and attach it to CInstantCamera.
-        // Let CInstantCamera take care of destroying the device.
-        const Pylon::String_t strDeviceFullName = GetString_t(lpszPathName);
-        Pylon::IPylonDevice* pDevice = Pylon::CTlFactory::GetInstance().CreateDevice(strDeviceFullName);
-        m_camera.Attach(pDevice, Pylon::Cleanup_Delete);
+		//if (!isUSBCamera) {
+		//	if (deviceName.Find(_T("ace")) == 0 || deviceName.Find(_T("daa")) == 0 || deviceName.Find(_T("pua")) == 0)
+		//		isUSBCamera = TRUE;
+		//}
 
-        // Open camera.
-        m_camera.Open();
+		CBaslerUsbInstantCamera *ptrUsbCamera = nullptr;
+		CInstantCamera* ptrCamera = (isUSBCamera ? (ptrUsbCamera = new CBaslerUsbInstantCamera()) : new CInstantCamera());
+		m_camera = std::unique_ptr<CInstantCamera>(ptrCamera);
 
-        // Get the Exposure Time feature.
-        // On GigE cameras, the feature is named 'ExposureTimeRaw'.
-        // On USB cameras, it is named 'ExposureTime'.
-        m_ptrExposureTime = GetIntegerFeature( m_camera.GetNodeMap().GetNode( "ExposureTime" ) );
-        if (!m_ptrExposureTime.IsValid())
-        {
-            m_ptrExposureTime = GetIntegerFeature( m_camera.GetNodeMap().GetNode( "ExposureTimeRaw" ) );
-        }
-        if (m_ptrExposureTime.IsValid())
-        {
-            // Add a callback that triggers the update.
-            m_hExposureTime = GenApi::Register( m_ptrExposureTime->GetNode(), *this, &CMCADoc::OnNodeChanged );
-        }
+		ASSERT(!m_camera->IsPylonDeviceAttached());
+
+		// Add the AutoPacketSizeConfiguration and let pylon delete it when not needed anymore.
+		m_camera->RegisterConfiguration(new CAutoPacketSizeConfiguration(), Pylon::RegistrationMode_Append, Pylon::Cleanup_Delete);
+
+		// Create the device and attach it to CInstantCamera.
+		// Let CInstantCamera take care of destroying the device.
+		const Pylon::String_t strDeviceFullName = GetString_t(lpszPathName);
+		Pylon::IPylonDevice* pDevice = Pylon::CTlFactory::GetInstance().CreateDevice(strDeviceFullName);
+		m_camera->Attach(pDevice, Pylon::Cleanup_Delete);
+
+		// Open camera.
+		m_camera->Open();
+
+		// Get the Exposure Time feature.
+		// On GigE cameras, the feature is named 'ExposureTimeRaw'.
+		// On USB cameras, it is named 'ExposureTime'.
+		m_ptrExposureTime = GetIntegerFeature(m_camera->GetNodeMap().GetNode("ExposureTime"));
+		if (!m_ptrExposureTime.IsValid())
+		{
+			m_ptrExposureTime = GetIntegerFeature(m_camera->GetNodeMap().GetNode("ExposureTimeRaw"));
+		}
+		if (m_ptrExposureTime.IsValid())
+		{
+			// Add a callback that triggers the update.
+			m_hExposureTime = GenApi::Register(m_ptrExposureTime->GetNode(), *this, &CMCADoc::OnNodeChanged);
+		}
 
 		//
-		m_ptrWidth = GetIntegerFeature(m_camera.GetNodeMap().GetNode("Width"));
+		m_ptrWidth = GetIntegerFeature(m_camera->GetNodeMap().GetNode("Width"));
 		if (!m_ptrWidth.IsValid())
 		{
-			m_ptrWidth = GetIntegerFeature(m_camera.GetNodeMap().GetNode("WidthRaw"));
+			m_ptrWidth = GetIntegerFeature(m_camera->GetNodeMap().GetNode("WidthRaw"));
 		}
 		if (m_ptrWidth.IsValid())
 		{
@@ -850,10 +885,10 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 		}
 
 		//
-		m_ptrHeight = GetIntegerFeature(m_camera.GetNodeMap().GetNode("Height"));
+		m_ptrHeight = GetIntegerFeature(m_camera->GetNodeMap().GetNode("Height"));
 		if (!m_ptrHeight.IsValid())
 		{
-			m_ptrHeight = GetIntegerFeature(m_camera.GetNodeMap().GetNode("HeightRaw"));
+			m_ptrHeight = GetIntegerFeature(m_camera->GetNodeMap().GetNode("HeightRaw"));
 		}
 		if (m_ptrHeight.IsValid())
 		{
@@ -861,43 +896,41 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 			m_hHeight = GenApi::Register(m_ptrHeight->GetNode(), *this, &CMCADoc::OnNodeChanged);
 		}
 
-
-		if (GenApi::IsWritable(m_camera.AcquisitionFrameRateEnable))
-		{
-			m_camera.AcquisitionFrameRateEnable = true;
-			//cout << "set GrabLoopThreadPriorityOverwrite" << endl;
-				//cout << "set GrabLoopThreadPriority" << endl;
-		// camera.GrabLoopThreadPriority.SetValue(34);
-		}
-		else { TRACE(CUtf82W("NOTE: cannot set Acquisition Frame Rate")); }
+		if (nullptr != ptrUsbCamera) {
+			if (GenApi::IsWritable(ptrUsbCamera->AcquisitionFrameRateEnable))
+			{
+				ptrUsbCamera->AcquisitionFrameRateEnable = true;
+			}
+			else { TRACE(CUtf82W("NOTE: cannot set Acquisition Frame Rate")); }
 		
-		m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRate"));
-		if (!m_ptrFrameRate.IsValid())
-		{
-			m_ptrFrameRate = GetIntegerFeature(m_camera.GetNodeMap().GetNode("AcquisitionFrameRateAbs"));
-		}
-		if (!m_ptrFrameRate.IsValid())
-		{
-			try {
-				m_ptrFrameRate = (GenApi::IInteger*)&m_camera.AcquisitionFrameRate;
+		
+			m_ptrFrameRate = GetIntegerFeature(m_camera->GetNodeMap().GetNode("AcquisitionFrameRate"));
+			if (!m_ptrFrameRate.IsValid())
+			{
+				m_ptrFrameRate = GetIntegerFeature(m_camera->GetNodeMap().GetNode("AcquisitionFrameRateAbs"));
 			}
-			catch (...) {
+			if (!m_ptrFrameRate.IsValid())
+			{
+				try {
+					m_ptrFrameRate = (GenApi::IInteger*)&ptrUsbCamera->AcquisitionFrameRate;
+				}
+				catch (...) {
 
+				}
+			}
+			if (m_ptrFrameRate.IsValid())
+			{
+				// Add a callback that triggers the update.
+				m_hFrameRate = GenApi::Register(m_ptrFrameRate->GetNode(), *this, &CMCADoc::OnNodeChanged);
 			}
 		}
-		if (m_ptrFrameRate.IsValid())
-		{
-			// Add a callback that triggers the update.
-			m_hFrameRate = GenApi::Register(m_ptrFrameRate->GetNode(), *this, &CMCADoc::OnNodeChanged);
-		}
-
         // Get the Gain feature.
         // On GigE cameras, the feature is named 'GainRaw'.
         // On USB cameras, it is named 'Gain'.
-        m_ptrGain = GetIntegerFeature( m_camera.GetNodeMap().GetNode( "Gain" ) );
+        m_ptrGain = GetIntegerFeature( m_camera->GetNodeMap().GetNode( "Gain" ) );
         if (!m_ptrGain.IsValid())
         {
-            m_ptrGain = GetIntegerFeature( m_camera.GetNodeMap().GetNode( "GainRaw" ) );
+            m_ptrGain = GetIntegerFeature( m_camera->GetNodeMap().GetNode( "GainRaw" ) );
         }
         if (m_ptrGain.IsValid())
         {   // Add a callback that triggers the update.
@@ -905,7 +938,7 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
         }
 
         // Get the Test Image Selector feature.
-        m_ptrTestImage = m_camera.GetNodeMap().GetNode( "TestImageSelector" );
+        m_ptrTestImage = m_camera->GetNodeMap().GetNode( "TestImageSelector" );
         if (m_ptrTestImage.IsValid())
         {
             // Add a callback that triggers the update.
@@ -913,7 +946,7 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
         }
 
         // Get the Pixel Format feature.
-        m_ptrPixelFormat = m_camera.GetNodeMap().GetNode( "PixelFormat" );
+        m_ptrPixelFormat = m_camera->GetNodeMap().GetNode( "PixelFormat" );
         if (m_ptrPixelFormat.IsValid())
         {
             // Add a callback that triggers the update.
@@ -962,10 +995,10 @@ BOOL CMCADoc::RegisterListeners()
 	{
 		// Register this object as an image event handler, so we will be notified of new new images
 		// See Pylon::CImageEventHandler for details
-		m_camera.RegisterImageEventHandler(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
+		m_camera->RegisterImageEventHandler(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
 		// Register this object as a configuration event handler, so we will be notified of camera state changes.
 		// See Pylon::CConfigurationEventHandler for details
-		m_camera.RegisterConfiguration(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
+		m_camera->RegisterConfiguration(this, Pylon::RegistrationMode_ReplaceAll, Pylon::Ownership_ExternalOwnership);
 	}
 	catch (const Pylon::GenericException& e)
 	{
@@ -1044,7 +1077,7 @@ void CMCADoc::OnUpdateFileImageSaveAs(CCmdUI *pCmdUI)
 void CMCADoc::OnUpdateNodes()
 {
     // Check the camera. It may have been removed.
-    if (m_camera.IsPylonDeviceAttached())
+    if (m_camera->IsPylonDeviceAttached())
     {
 		UpdateSettingsDisplay();
     }

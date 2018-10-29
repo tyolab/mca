@@ -63,6 +63,8 @@ public:
 	UINT GetHeightValue();
 	UINT GetGainValue();
 
+	void SetFrameRateValue(UINT fr);
+
 	void SaveVideo(CString path, CString timestamp);
 
 	static const UINT GetDuration() {
@@ -145,6 +147,8 @@ public:
 	BOOL IsCameraInUse();
 	BOOL HasImage();
 
+	Pylon::CBaslerUsbInstantCamera* GetUsbCameraPtr();
+
 protected:
     mutable CCriticalSection m_MemberLock;
     uint64_t m_cntGrabbedImages;
@@ -165,7 +169,7 @@ private:
 	std::list<std::unique_ptr<CImageResult> > m_buffer;
 
     // The camera
-    Pylon::CBaslerUsbInstantCamera m_camera;
+    std::unique_ptr<Pylon::CInstantCamera> m_camera;
     // The grab result retrieved from the camera
     Pylon::CGrabResultPtr m_ptrGrabResult;
     // The grab result as a windows DIB to be displayed on the screen
