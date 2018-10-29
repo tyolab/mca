@@ -49,6 +49,7 @@ END_MESSAGE_MAP()
 UINT CMCADoc::m_duration = 1;
 UINT CMCADoc::m_bufferSize = DEFAULT_BUFFER_SIZE;
 UINT CMCADoc::m_fps = 0;
+UINT CMCADoc::m_fpsView = 10;
 
 // CMCADoc construction/destruction
 CMCADoc::CMCADoc()
@@ -334,7 +335,7 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
 
     // Tell the document that there is a new image available so it can update the image window.
 	// skip the 4 frames
-	if (1 == (m_cntGrabbedImages % 5)) {
+	if (1 == (m_cntGrabbedImages % m_fpsView)) {
 		CWnd* pWnd = AfxGetApp()->GetMainWnd();
 		ASSERT(pWnd != NULL);
 		if (pWnd != NULL)
@@ -636,6 +637,7 @@ int CMCADoc::GetResultingFrValue()
 
 	if (0 == m_id) {
 		m_fps = ptrUsbCamera->ResultingFrameRate.GetValue();
+		m_fpsView = m_fps / 20;
 		return m_fps;
 	}
 	return ptrUsbCamera->ResultingFrameRate.GetValue();

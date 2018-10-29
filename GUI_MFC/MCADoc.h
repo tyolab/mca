@@ -159,6 +159,7 @@ protected:
 	static UINT m_duration;
 	static UINT m_bufferSize;
 	static UINT m_fps; // the real resulting frame rate 
+	static UINT m_fpsView; // for updating the view fresh rate, make 10 initially, which means the view get refreshed for continious grabbing for very 10 images 
 
 private:
 	int			 m_id;
