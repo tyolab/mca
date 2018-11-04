@@ -270,8 +270,52 @@ void CMCAApp::OnStopGrab()
 	strftime(buffer, sizeof(buffer), "%Y%m%d-%H%M%S", timeinfo);
 
 	CString timestamp = CString(buffer);
-	m_cameraInfo1.SaveVideo(m_strOutputFolder, timestamp);
-	m_cameraInfo2.SaveVideo(m_strOutputFolder, timestamp);
+	/**
+		align the frames
+		with timestamp
+	 */
+	UINT size;
+	if (m_cameraInfo1.m_pCameraDoc != nullptr && m_cameraInfo2.m_pCameraDoc != nullptr) {
+		std::list<std::unique_ptr<CImageResult> >* list1 = m_cameraInfo1.m_pCameraDoc->GetBufferPtr();
+		std::list<std::unique_ptr<CImageResult> >* list2 = m_cameraInfo2.m_pCameraDoc->GetBufferPtr();
+
+		size = list1->size() > list2->size() ? list2->size() : list1->size();
+
+		std::unique_ptr<CImageResult>& back1 = list1->back();
+		std::unique_ptr<CImageResult>& back2 = list2->back();
+		uint64_t earliestEnd = back1->GetTimeStamp() > back2->GetTimeStamp() ? back2->GetTimeStamp() : back1->GetTimeStamp();
+		std::list<std::unique_ptr<CImageResult> >::iterator it;
+		it = list1->end();
+		while (TRUE) {
+			// --it;
+			std::unique_ptr<CImageResult>& back = list1->back();
+			if ((back)->GetTimeStamp() <= earliestEnd)
+				break;
+			list1->pop_back();
+		}
+
+		while (TRUE) {
+			// --it;
+			std::unique_ptr<CImageResult>& back = list2->back();
+			if ((back)->GetTimeStamp() <= earliestEnd)
+				break;
+			list2->pop_back();
+		}
+	}
+	else if (m_cameraInfo1.m_pCameraDoc != nullptr)
+		size = m_cameraInfo1.m_pCameraDoc->GetBufferPtr()->size();
+	else if (m_cameraInfo2.m_pCameraDoc != nullptr)
+		size = m_cameraInfo2.m_pCameraDoc->GetBufferPtr()->size();
+
+	UINT duration = CMCADoc::GetDuration();
+	UINT fps = CMCADoc::GetFPS();
+	UINT totalFramesNumber = duration * fps;
+	
+	if ((totalFramesNumber > 0 && totalFramesNumber < size))
+		size = totalFramesNumber;
+
+	m_cameraInfo1.SaveVideo(m_strOutputFolder, timestamp, size);
+	m_cameraInfo2.SaveVideo(m_strOutputFolder, timestamp, size);
 }
 
 void CMCAApp::OnNewGrabresultCamera1()

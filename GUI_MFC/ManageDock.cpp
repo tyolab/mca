@@ -12,13 +12,29 @@ BEGIN_MESSAGE_MAP(CManageDock, CDockablePane)
 	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
-CManageDock::CManageDock()
+CManageDock::CManageDock() :
+	m_wndManagePanel(NULL)
 {
 }
 
 
 CManageDock::~CManageDock()
 {
+}
+
+void CManageDock::OnSize(UINT nType, int cx, int cy)
+{
+	CDockablePane::OnSize(nType, cx, cy);
+
+	if (m_wndManagePanel)
+	{
+		CRect rect;
+		this->GetWindowRect(&rect);
+
+		//m_wndManagePanel->ResizeDynamicLayout();
+
+		m_wndManagePanel->SetWindowPos(NULL, -1, -1, rect.Width(), rect.Height(), SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+	}
 }
 
 //CConfigView * CManageDock::getConfigViewCamera()

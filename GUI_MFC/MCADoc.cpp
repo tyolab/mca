@@ -321,7 +321,10 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
 
 	if (m_ptrGrabResult.IsValid() && m_ptrGrabResult->GrabSucceeded())
 	{
-		m_buffer.push_back(std::unique_ptr<CImageResult>(new CImageResult(m_ptrGrabResult->GetBuffer(), m_ptrGrabResult->GetImageSize())));
+		CImageResult* ptrImageResult = new CImageResult(m_ptrGrabResult->GetBuffer(), m_ptrGrabResult->GetImageSize());
+		ptrImageResult->SetTimeStamp(m_ptrGrabResult->GetTimeStamp());
+
+		m_buffer.push_back(std::unique_ptr<CImageResult>(ptrImageResult));
 
 		if (m_buffer.size() > m_bufferSize) {
 			std::unique_ptr<CImageResult>& oldElem = m_buffer.front();
@@ -671,16 +674,16 @@ void CMCADoc::SetFrameRateValue(UINT fr)
 	}
 }
 
-void CMCADoc::SaveVideo(CString path, CString timestamp)
+void CMCADoc::SaveVideo(CString path, CString timestamp, UINT frameCount)
 {
-	UINT duration = CMCADoc::GetDuration();
-	UINT fps = CMCADoc::GetFPS();
-	UINT totalFramesNumber = duration * fps;
-	int size = totalFramesNumber > m_buffer.size() ? m_buffer.size() : totalFramesNumber;
+	UINT size = frameCount;
 
 	TRACE(_T("%s: Camera #%d, buffer size - %d, saving frames - %d\n"), __FUNCTIONW__, m_id, m_buffer.size(), size);
 
 	if (size > 0) {
+		/**
+			Save frames into video now
+		 */
 		CString cameraId;
 		CString csTitle;
 
@@ -688,10 +691,6 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 			cameraId.Format(_T("Camera%d-"), m_id + 1);
 		else
 			cameraId = CString("Camera-");
-
-		csTitle = path + CString("\\") + cameraId + timestamp + CString(".mp4");
-		//const char* cstr = (LPCTSTR) csTitle;
-		CT2A ascii(csTitle);
 
 		// The frame rate used for playing the video (playback frame rate).
 		const int cFramesPerSecond = 25;
@@ -721,6 +720,10 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 				//pCompressionOptions = &compressionOptions;
 
 				// Open the AVI writer.
+				csTitle = path + CString("\\") + cameraId + timestamp + CString(".avi");
+				//const char* cstr = (LPCTSTR) csTitle;
+				CT2A ascii(csTitle);
+
 				videoWriter.Open(
 					ascii.m_psz,
 					cFramesPerSecond,
@@ -745,6 +748,10 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 			else {
 				// Create a video writer object.
 				CVideoWriter videoWriter;
+
+				csTitle = path + CString("\\") + cameraId + timestamp + CString(".mp4");
+				//const char* cstr = (LPCTSTR) csTitle;
+				CT2A ascii(csTitle);
 
 				// Open the video writer.
 				videoWriter.SetParameter(

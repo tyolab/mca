@@ -16,6 +16,8 @@ public:
 public:
 	CManageDock();
 	virtual ~CManageDock();
+	
+	void OnSize(UINT nType, int cx, int cy);
 
 	CConfigView *getConfigView() {
 		return m_wndManagePanel;

@@ -52,8 +52,8 @@ public:
     GenApi::IEnumeration* GetTestImage();
     GenApi::IEnumeration* GetPixelFormat();
 
-	const std::list<std::unique_ptr<CImageResult> >& GetBuffer() {
-		return m_buffer;
+	std::list<std::unique_ptr<CImageResult> >* GetBufferPtr() {
+		return &m_buffer;
 	}
 
 	UINT GetExposureTimeValue();
@@ -65,7 +65,7 @@ public:
 
 	void SetFrameRateValue(UINT fr);
 
-	void SaveVideo(CString path, CString timestamp);
+	void SaveVideo(CString path, CString timestamp, UINT frameCount);
 
 	static const UINT GetDuration() {
 		return m_duration;

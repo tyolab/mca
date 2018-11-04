@@ -35,7 +35,7 @@ void CCameraInfo::StopGrabbing()
 	}
 }
 
-void CCameraInfo::SaveVideo(CString path, CString timestamp)
+void CCameraInfo::SaveVideo(CString path, CString timestamp, UINT frameCount)
 {
 	if (NULL != m_pCameraDoc) {
 		m_pCameraDoc->SaveVideo(path, timestamp);

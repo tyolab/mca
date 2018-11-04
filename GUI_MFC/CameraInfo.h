@@ -21,7 +21,7 @@ public:
 	void GrabMore();
 	void StopGrabbing();
 
-	void SaveVideo(CString paht, CString timestamp);
+	void SaveVideo(CString paht, CString timestamp, UINT frameCount);
 
 	void SetID(int id) {
 		m_id = id;

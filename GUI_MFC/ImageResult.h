@@ -5,6 +5,7 @@ class CImageResult
 private:
 	void* m_buffer;
 	UINT m_bufferSize;
+	uint64_t m_TimeStamp;
 
 public:
 	CImageResult(const void *buffer, UINT size);
@@ -16,6 +17,15 @@ public:
 
 	const UINT GetImageSize() {
 		return m_bufferSize;
+	}
+
+	void SetTimeStamp(uint64_t timestamp) {
+		m_TimeStamp = timestamp;
+	}
+
+	uint64_t GetTimeStamp() const
+	{
+		return m_TimeStamp;
 	}
 };
 
