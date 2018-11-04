@@ -681,29 +681,6 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 	TRACE(_T("%s: Camera #%d, buffer size - %d, saving frames - %d\n"), __FUNCTIONW__, m_id, m_buffer.size(), size);
 
 	if (size > 0) {
-		// Create a video writer object.
-		CVideoWriter videoWriter;
-
-		// The frame rate used for playing the video (playback frame rate).
-		const int cFramesPerSecond = 25;
-		// The quality used for compressing the video.
-		const uint32_t cQuality = 100;
-
-		// Map the pixelType
-		CEnumerationPtr pixelFormat = GetPixelFormat();
-		CPixelTypeMapper pixelTypeMapper(pixelFormat);
-		EPixelType pixelType = pixelTypeMapper.GetPylonPixelTypeFromNodeValue(pixelFormat->GetIntValue());
-		// Open the video writer.
-				// Set parameters before opening the video writer.
-		uint32_t width = (uint32_t)GetWidth()->GetValue();
-		uint32_t height = (uint32_t)GetHeight()->GetValue();
-		videoWriter.SetParameter(
-			width,
-			height,
-			pixelType,
-			cFramesPerSecond,
-			cQuality);
-
 		CString cameraId;
 		CString csTitle;
 
@@ -715,19 +692,82 @@ void CMCADoc::SaveVideo(CString path, CString timestamp)
 		csTitle = path + CString("\\") + cameraId + timestamp + CString(".mp4");
 		//const char* cstr = (LPCTSTR) csTitle;
 		CT2A ascii(csTitle);
-		videoWriter.Open(ascii.m_psz);
+
+		// The frame rate used for playing the video (playback frame rate).
+		const int cFramesPerSecond = 25;
+		// The quality used for compressing the video.
+		const uint32_t cQuality = 100;
+		// Set parameters before opening the video writer.
+		uint32_t width = (uint32_t)GetWidth()->GetValue();
+		uint32_t height = (uint32_t)GetHeight()->GetValue();
+
+		// Map the pixelType
+		CEnumerationPtr pixelFormat = GetPixelFormat();
+		CPixelTypeMapper pixelTypeMapper(pixelFormat);
+		EPixelType pixelType = pixelTypeMapper.GetPylonPixelTypeFromNodeValue(pixelFormat->GetIntValue());
 
 		try {
-			std::list<std::unique_ptr<CImageResult> >::iterator it = m_buffer.end();
-			while (size-- > 0)
-				--it;
-			while (it != m_buffer.end()) {
-				std::unique_ptr<CImageResult>& ptrResult = *it;
-				videoWriter.Add(ptrResult->GetBuffer(), ptrResult->GetImageSize(), pixelType, width, height, 0, ImageOrientation_TopDown);
-				++it;
+			if (theApp.m_bSaveInAvi) {
+				CAviWriter videoWriter;
+
+				// The AVI writer supports the output formats PixelType_Mono8,
+				// PixelType_BGR8packed, and PixelType_BGRA8packed.
+				EPixelType aviPixelType = PixelType_BGR8packed;
+				// Optionally set up compression options.
+				SAviCompressionOptions* pCompressionOptions = NULL;
+				// Uncomment the two code lines below to enable AVI compression.
+				// A dialog will be shown for selecting the codec.
+				//SAviCompressionOptions compressionOptions( "MSVC", true);
+				//pCompressionOptions = &compressionOptions;
+
+				// Open the AVI writer.
+				videoWriter.Open(
+					ascii.m_psz,
+					cFramesPerSecond,
+					pixelType,
+					width,
+					height,
+					ImageOrientation_BottomUp, // Some compression codecs will not work with top down oriented images.
+					pCompressionOptions);
+
+				std::list<std::unique_ptr<CImageResult> >::iterator it = m_buffer.end();
+				while (size-- > 0)
+					--it;
+				while (it != m_buffer.end()) {
+					std::unique_ptr<CImageResult>& ptrResult = *it;
+					videoWriter.Add(ptrResult->GetBuffer(), ptrResult->GetImageSize(), pixelType, width, height, 0, ImageOrientation_TopDown);
+					++it;
+				}
+				videoWriter.Close();
+				m_buffer.clear();
+
 			}
-			videoWriter.Close();
-			m_buffer.clear();
+			else {
+				// Create a video writer object.
+				CVideoWriter videoWriter;
+
+				// Open the video writer.
+				videoWriter.SetParameter(
+					width,
+					height,
+					pixelType,
+					cFramesPerSecond,
+					cQuality);
+
+				videoWriter.Open(ascii.m_psz);
+
+				std::list<std::unique_ptr<CImageResult> >::iterator it = m_buffer.end();
+				while (size-- > 0)
+					--it;
+				while (it != m_buffer.end()) {
+					std::unique_ptr<CImageResult>& ptrResult = *it;
+					videoWriter.Add(ptrResult->GetBuffer(), ptrResult->GetImageSize(), pixelType, width, height, 0, ImageOrientation_TopDown);
+					++it;
+				}
+				videoWriter.Close();
+				m_buffer.clear();
+
+			}
 		}
 		catch (const Pylon::GenericException &e)
 		{
@@ -1070,7 +1110,6 @@ void CMCADoc::OnFileImageSaveAs()
         }
     }
 }
-
 
 void CMCADoc::OnUpdateFileImageSaveAs(CCmdUI *pCmdUI)
 {

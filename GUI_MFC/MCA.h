@@ -38,6 +38,7 @@ public:
 // Implementation
 	UINT  m_nAppLook;
 	BOOL  m_bHiColorIcons;
+	BOOL  m_bSaveInAvi;
 
     afx_msg void OnAppAbout();
 	afx_msg void OnGrabOne();

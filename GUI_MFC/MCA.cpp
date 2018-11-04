@@ -62,6 +62,7 @@ CMCAApp::CMCAApp()
     // Place all significant initialization in InitInstance
 	m_cameraInfo1.SetID(0);
 	m_cameraInfo2.SetID(1);
+	m_bSaveInAvi = TRUE;
 }
 
 // The one and only CMCAApp object

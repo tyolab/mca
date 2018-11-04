@@ -637,6 +637,10 @@ void CConfigView::OnCbnSelendokPixelformatCombo()
         try
         {
             pEnumeration->SetIntValue( pEntry->GetValue() );
+			if (nullptr != m_ptrPartnerView) {
+				m_ptrPartnerView->GetDocument()->GetPixelFormat()->SetIntValue( pEntry->GetValue() );
+				m_ptrPartnerView->GetDocument()->UpdateSettingsDisplay();
+			}
         }
         catch (GenICam::GenericException &e)
         {
