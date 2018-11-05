@@ -149,6 +149,9 @@ public:
 
 	Pylon::CBaslerUsbInstantCamera* GetUsbCameraPtr();
 
+	void StartGrabbing(uint64_t timestamp);
+	void Align(uint64_t timestampStart, uint64_t timestamp);
+
 protected:
     mutable CCriticalSection m_MemberLock;
     uint64_t m_cntGrabbedImages;
@@ -165,6 +168,16 @@ private:
 	int			 m_id;
 	CString		 m_title;
 	BOOL		 m_cameraReady;
+	BOOL		 m_isUsbCamera;
+
+	// Recording timestamp 
+	uint64_t	 m_firstTimeStamp;
+
+	// the first frame timestamp from camera
+	uint64_t	 m_firstTimeStampCamera;
+
+	// the timestamp for starting recording
+	uint64_t	 m_startTimeStamp;
 
 	// frame buffer
 	std::list<std::unique_ptr<CImageResult> > m_buffer;

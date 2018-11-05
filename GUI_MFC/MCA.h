@@ -79,6 +79,9 @@ private:
 	// video output folder
 	CString m_strOutputFolder;
 
+	// Recording timestamp 
+	uint64_t m_startTimeStamp;
+
 public:
     afx_msg void OnOpenCamera();
 };

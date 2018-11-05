@@ -22,10 +22,10 @@ void CCameraInfo::GrabOne()
 		m_pCameraDoc->OnGrabOne();
 }
 
-void CCameraInfo::GrabMore()
+void CCameraInfo::GrabMore(uint64_t timestamp)
 {
 	if (NULL != m_pCameraDoc)
-		m_pCameraDoc->OnStartGrabbing();
+		m_pCameraDoc->StartGrabbing(timestamp);
 }
 
 void CCameraInfo::StopGrabbing()
@@ -38,7 +38,7 @@ void CCameraInfo::StopGrabbing()
 void CCameraInfo::SaveVideo(CString path, CString timestamp, UINT frameCount)
 {
 	if (NULL != m_pCameraDoc) {
-		m_pCameraDoc->SaveVideo(path, timestamp);
+		m_pCameraDoc->SaveVideo(path, timestamp, frameCount);
 	}
 }
 

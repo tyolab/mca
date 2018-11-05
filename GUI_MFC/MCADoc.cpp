@@ -16,9 +16,11 @@
 #include "AutoPacketSizeConfiguration.h"
 
 #include <ctime>
+#include <chrono>
 
 using namespace Pylon;
 using namespace GenApi;
+using namespace Basler_UsbCameraParams;
 
 const UINT DEFAULT_BUFFER_SIZE = 1000; // for example, 200fps, the buffer can hold 50s of recording
 
@@ -65,6 +67,7 @@ CMCADoc::CMCADoc()
 	, m_hFrameRate(NULL)
 	, m_cameraReady(FALSE)
 	, m_camera(new CInstantCamera())
+	, m_isUsbCamera(FALSE)
 {
     // TODO: add one-time construction code here
 	m_id = -1;
@@ -307,10 +310,6 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     // filling up the debug output.
     //TRACE(_T("%s\n"), __FUNCTIONW__);
 
-	++m_cntGrabbedImages;
-
-	TRACE(_T("%s: Camera #%d - %d image(s) grabbed, %d dropped\n"), __FUNCTIONW__, m_id, m_cntGrabbedImages, m_cntDroppedImages);
-
     // The m_ptrGrabResult will be accessed from different threads,
     // so we need to protect it with the m_MemberLock.
     CSingleLock lock(&m_MemberLock, TRUE);
@@ -319,10 +318,52 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
     // released and reused by CInstantCamera.
     m_ptrGrabResult = grabResult;
 
+	// first frame
+	if (m_cntGrabbedImages == 0) {
+		m_firstTimeStamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
+	uint64_t timestamp = 0;
+
 	if (m_ptrGrabResult.IsValid() && m_ptrGrabResult->GrabSucceeded())
 	{
 		CImageResult* ptrImageResult = new CImageResult(m_ptrGrabResult->GetBuffer(), m_ptrGrabResult->GetImageSize());
-		ptrImageResult->SetTimeStamp(m_ptrGrabResult->GetTimeStamp());
+
+		/*if (PayloadType_ChunkData == m_ptrGrabResult->GetPayloadType() && m_isUsbCamera)
+		{*/
+			// Generic parameter access:
+	   // This shows the access via the chunk data node map. This method is available for all grab result types.
+			try {
+				GenApi::CIntegerPtr chunkTimestamp(m_ptrGrabResult->GetChunkDataNodeMap().GetNode("ChunkTimestamp"));
+
+				// Access the chunk data attached to the result.
+				// Before accessing the chunk data, you should check to see
+				// if the chunk is readable. When it is readable, the buffer
+				// contains the requested chunk data.
+				if (IsReadable(chunkTimestamp))
+					timestamp = (chunkTimestamp->GetValue());
+
+				// CBaslerUsbGrabResultPtr ptrGrabResult = CBaslerUsbGrabResultPtr(grabResult); // Or use Camera_t::GrabResultPtr_t
+				
+			}
+			catch (...) {
+				// 
+
+			}
+			// TRACE(_T("Unexpected payload type received."));
+	
+		//}
+
+			if (timestamp == 0)
+				timestamp = m_ptrGrabResult->GetTimeStamp();
+
+			if (timestamp == 0)
+				timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+			if (m_cntGrabbedImages == 0)
+				m_firstTimeStampCamera = timestamp;
+
+			ptrImageResult->SetTimeStamp(timestamp);
 
 		m_buffer.push_back(std::unique_ptr<CImageResult>(ptrImageResult));
 
@@ -335,6 +376,9 @@ void CMCADoc::OnImageGrabbed(Pylon::CInstantCamera& camera, const Pylon::CGrabRe
 	}
 
     lock.Unlock();
+
+	++m_cntGrabbedImages;
+	TRACE(_T("%s: Camera #%d - %d image(s) grabbed, %d dropped\n"), __FUNCTIONW__, m_id, m_cntGrabbedImages, m_cntDroppedImages);
 
     // Tell the document that there is a new image available so it can update the image window.
 	// skip the 4 frames
@@ -527,6 +571,36 @@ CBaslerUsbInstantCamera * CMCADoc::GetUsbCameraPtr()
 	if (m_camera->IsUsb())
 		return dynamic_cast<CBaslerUsbInstantCamera*>(m_camera.get());
 	return nullptr;
+}
+
+void CMCADoc::StartGrabbing(uint64_t timestamp)
+{
+	m_startTimeStamp = timestamp;
+	OnStartGrabbing();
+}
+
+void CMCADoc::Align(uint64_t timestampStart, uint64_t timestampEnd)
+{
+	uint64_t tsStopPoint = 0;
+	uint64_t durationRecording = timestampEnd - timestampStart;
+	uint64_t gap = m_firstTimeStamp - timestampStart;
+	tsStopPoint = m_firstTimeStampCamera + durationRecording - gap;
+
+	UINT sizeOrig = m_buffer.size();
+	while (TRUE) {
+		// --it;
+		std::unique_ptr<CImageResult>& back = m_buffer.back();
+		uint64_t ts = (back)->GetTimeStamp();
+		if (ts <= tsStopPoint)
+			break;
+
+		if (m_buffer.size() == 0)
+			break;
+
+		m_buffer.pop_back();
+	}
+	TRACE(_T("duration: %I64d, gap: %I64d, ts start: %I64d, ts end: %I64d\n"), durationRecording, gap, timestampStart, timestampEnd);
+	TRACE(_T("Ignoring %d frames during alignment.\n"), sizeOrig - m_buffer.size());
 }
 
 
@@ -883,18 +957,18 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 		Pylon::IPylonDevice* pDevice = Pylon::CTlFactory::GetInstance().CreateDevice(strDeviceFullName);
 
 		CString deviceName = CString(pDevice->GetDeviceInfo().GetFriendlyName()).MakeLower();
-		BOOL isUSBCamera = FALSE;
+		// BOOL isUSBCamera = FALSE;
 
 		// Valid func only after camera is attached?
-		isUSBCamera = m_camera->IsUsb();
+		m_isUsbCamera = m_camera->IsUsb();
 
-		if (!isUSBCamera) {
+		if (!m_isUsbCamera) {
 			if (deviceName.Find(_T("basler aca")) == 0 || deviceName.Find(_T("basler daa")) == 0 || deviceName.Find(_T("basler pua")) == 0)
-				isUSBCamera = TRUE;
+				m_isUsbCamera = TRUE;
 		}
 
 		CBaslerUsbInstantCamera *ptrUsbCamera = nullptr;
-		CInstantCamera* ptrCamera = (isUSBCamera ? (ptrUsbCamera = new CBaslerUsbInstantCamera()) : new CInstantCamera());
+		CInstantCamera* ptrCamera = (m_isUsbCamera ? (ptrUsbCamera = new CBaslerUsbInstantCamera()) : new CInstantCamera());
 		m_camera = std::unique_ptr<CInstantCamera>(ptrCamera);
 
 		ASSERT(!m_camera->IsPylonDeviceAttached());
@@ -909,6 +983,7 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 		// Open camera.
 		m_camera->Open();
+
 
 		// Get the Exposure Time feature.
 		// On GigE cameras, the feature is named 'ExposureTimeRaw'.
@@ -949,6 +1024,30 @@ BOOL CMCADoc::OnOpenDocument(LPCTSTR lpszPathName)
 		}
 
 		if (nullptr != ptrUsbCamera) {
+			// We need the chunk image information
+			if (GenApi::IsWritable(ptrUsbCamera->ChunkModeActive))
+			{
+				ptrUsbCamera->ChunkModeActive.SetValue(true);
+
+				// Enable time stamp chunks.
+				ptrUsbCamera->ChunkSelector.SetValue(ChunkSelector_Timestamp);
+				ptrUsbCamera->ChunkEnable.SetValue(true);
+
+#ifndef USE_USB // USB camera devices provide generic counters. An explicit FrameCounter value is not provided by USB camera devices.
+				// Enable frame counter chunks.
+				ptrUsbCamera->ChunkSelector.SetValue(ChunkSelector_CounterValue);
+				ptrUsbCamera->ChunkEnable.SetValue(true);
+#endif
+
+				// Enable CRC checksum chunks.
+				ptrUsbCamera->ChunkSelector.SetValue(ChunkSelector_PayloadCRC16);
+				ptrUsbCamera->ChunkEnable.SetValue(true);
+			}
+			else
+			{
+				TRACE(CUtf82W("The camera doesn't support chunk features"));
+			}
+
 			if (GenApi::IsWritable(ptrUsbCamera->AcquisitionFrameRateEnable))
 			{
 				ptrUsbCamera->AcquisitionFrameRateEnable = true;

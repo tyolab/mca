@@ -18,7 +18,7 @@ public:
 	virtual ~CCameraInfo();
 
 	void GrabOne();
-	void GrabMore();
+	void GrabMore(uint64_t timestamp);
 	void StopGrabbing();
 
 	void SaveVideo(CString paht, CString timestamp, UINT frameCount);

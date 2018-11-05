@@ -15,10 +15,13 @@
 #include "ConfigView.h"
 #include "MCAView.h"
 
+#include <windows.h> 
+
 #include <windows.h>
 #include <shlobj.h>
 
 #include <ctime>
+#include <chrono>
 
 #include <pylon/PylonIncludes.h>
 
@@ -249,16 +252,37 @@ void CMCAApp::OnStartGrabbing()
 		return;
 	}
 
-	m_cameraInfo1.GrabMore();
-	m_cameraInfo2.GrabMore();
+	m_startTimeStamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	m_cameraInfo1.GrabMore(m_startTimeStamp);
+
+	// 
+#ifdef _DEBUG
+	// as in the emulator just all synced
+	Sleep(300);
+#endif
+
+	m_cameraInfo2.GrabMore(m_startTimeStamp);
 }
 
 void CMCAApp::OnStopGrab()
 {
+	uint64_t endTimeStamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	// uint64_t difference = endTimeStamp - m_startTimeStamp;
+
 	m_cameraInfo1.StopGrabbing();
+
+#ifdef _DEBUG
+	// as in the emulator just all synced
+	Sleep(300);
+#endif
+
 	m_cameraInfo2.StopGrabbing();
 
 	CWaitCursor wait;
+
+	// sleep for 1 second, make sure all cameras stop properly, and all end frame are received
+	Sleep(1000);
+
 	// saving video now
 	time_t rawtime;
 	struct tm * timeinfo;
@@ -276,31 +300,35 @@ void CMCAApp::OnStopGrab()
 	 */
 	UINT size;
 	if (m_cameraInfo1.m_pCameraDoc != nullptr && m_cameraInfo2.m_pCameraDoc != nullptr) {
+		
+		m_cameraInfo1.m_pCameraDoc->Align(m_startTimeStamp, endTimeStamp);
+		m_cameraInfo2.m_pCameraDoc->Align(m_startTimeStamp, endTimeStamp);
+
 		std::list<std::unique_ptr<CImageResult> >* list1 = m_cameraInfo1.m_pCameraDoc->GetBufferPtr();
 		std::list<std::unique_ptr<CImageResult> >* list2 = m_cameraInfo2.m_pCameraDoc->GetBufferPtr();
 
 		size = list1->size() > list2->size() ? list2->size() : list1->size();
 
-		std::unique_ptr<CImageResult>& back1 = list1->back();
-		std::unique_ptr<CImageResult>& back2 = list2->back();
-		uint64_t earliestEnd = back1->GetTimeStamp() > back2->GetTimeStamp() ? back2->GetTimeStamp() : back1->GetTimeStamp();
-		std::list<std::unique_ptr<CImageResult> >::iterator it;
-		it = list1->end();
-		while (TRUE) {
-			// --it;
-			std::unique_ptr<CImageResult>& back = list1->back();
-			if ((back)->GetTimeStamp() <= earliestEnd)
-				break;
-			list1->pop_back();
-		}
+		//std::unique_ptr<CImageResult>& back1 = list1->back();
+		//std::unique_ptr<CImageResult>& back2 = list2->back();
+		//uint64_t earliestEnd = back1->GetTimeStamp() > back2->GetTimeStamp() ? back2->GetTimeStamp() : back1->GetTimeStamp();
+		//std::list<std::unique_ptr<CImageResult> >::iterator it;
+		//it = list1->end();
+		//while (TRUE) {
+		//	// --it;
+		//	std::unique_ptr<CImageResult>& back = list1->back();
+		//	if ((back)->GetTimeStamp() <= earliestEnd)
+		//		break;
+		//	list1->pop_back();
+		//}
 
-		while (TRUE) {
-			// --it;
-			std::unique_ptr<CImageResult>& back = list2->back();
-			if ((back)->GetTimeStamp() <= earliestEnd)
-				break;
-			list2->pop_back();
-		}
+		//while (TRUE) {
+		//	// --it;
+		//	std::unique_ptr<CImageResult>& back = list2->back();
+		//	if ((back)->GetTimeStamp() <= earliestEnd)
+		//		break;
+		//	list2->pop_back();
+		//}
 	}
 	else if (m_cameraInfo1.m_pCameraDoc != nullptr)
 		size = m_cameraInfo1.m_pCameraDoc->GetBufferPtr()->size();
